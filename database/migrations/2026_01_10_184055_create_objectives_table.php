@@ -11,11 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('teams', function (Blueprint $table) {
+        Schema::create('objectives', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->text('description')->nullable();
+            $table->enum('priority', ['Low', 'Medium', 'High'])->default('Medium');
 
-            $table->foreignId('status_id')->constrained();
+            $table->foreignId('project_id')->constrained();
+            $table->foreignId('objective_status_id')->constrained();
             $table->timestamps();
         });
     }
@@ -25,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('teams');
+        Schema::dropIfExists('objectives');
     }
 };
