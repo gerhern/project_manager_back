@@ -18,7 +18,7 @@ return new class extends Migration
             $table->enum('priority', ['Low', 'Medium', 'High'])->default('Medium');
 
             $table->foreignId('project_id')->constrained();
-            $table->foreignId('objective_status_id')->constrained();
+            $table->enum('status', ['Completed', 'NotCompleted', 'Canceled'])->default('NotCompleted');
             $table->timestamps();
         });
     }

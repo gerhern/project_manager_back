@@ -46,4 +46,10 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function teams(){
+        return $this->belongsToMany(Team::class, 'memberships', 'user_id', 'model_id')
+            ->where('model_type', Team::class)
+            ->withPivot('role_id');
+    }
 }

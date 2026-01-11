@@ -16,9 +16,9 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
 
+            $table->foreignId('team_id')->constrained();
             $table->foreignId('user_id')->constrained();
-            $table->foreignId('project_status_id')->constrained();
-            // $table->foreignId('team_id')->constrained();
+            $table->enum('status', ['Active', 'CancelInProgress', 'Canceled', 'Completed'])->default('Active');
 
             $table->timestamps();
         });
