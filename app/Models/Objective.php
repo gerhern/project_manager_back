@@ -12,4 +12,8 @@ class Objective extends Model
     public function tasks(){
         return $this->hasMany(Task::class);
     }
+
+    public function project(){
+        return $this->belongsTo(Project::class);
+    }
 }
