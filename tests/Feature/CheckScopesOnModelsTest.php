@@ -43,7 +43,6 @@ class CheckScopesOnModelsTest extends TestCase
         $projectWithClosedDispute = Project::factory()->create(['status' => ProjectStatus::Active, 'team_id' => $team->id, 'user_id' => $user->id]);
         $projectWithoutDispute = Project::factory()->create(['status' => ProjectStatus::Active, 'team_id' => $team->id, 'user_id' => $user->id]);
 
-        // Disputa Abierta
         ProjectDispute::factory()->create([
             'project_id' => $projectWithDispute->id,
             'user_id' => $projectWithDispute->user_id,
@@ -51,7 +50,6 @@ class CheckScopesOnModelsTest extends TestCase
             'expired_at' => now()->addDays(1),
         ]);
 
-        // Disputa Cerrada
         ProjectDispute::factory()->create([
             'project_id' => $projectWithClosedDispute->id,
             'user_id' => $projectWithClosedDispute->user_id,
@@ -59,15 +57,8 @@ class CheckScopesOnModelsTest extends TestCase
             'expired_at' => now()->subDays(1),
         ]);
 
-        // 2. ACT & ASSERT
-
-        // Caso 1: Tiene disputa abierta (Debe ser true)
         $this->assertTrue($projectWithDispute->hasOpenDispute(), 'Falló: El proyecto debería reconocer la disputa abierta.');
-
-        // Caso 2: Tiene disputa pero está cerrada (Debe ser false)
         $this->assertFalse($projectWithClosedDispute->hasOpenDispute(), 'Falló: El proyecto no debería reconocer una disputa cerrada como abierta.');
-
-        // Caso 3: No tiene registros en la tabla (Debe ser false)
         $this->assertFalse($projectWithoutDispute->hasOpenDispute(), 'Falló: El proyecto sin registros reporta una disputa inexistente.');
     }
 }
