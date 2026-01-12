@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('objectives', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('title');
             $table->text('description')->nullable();
             $table->enum('priority', ['Low', 'Medium', 'High'])->default('Medium');
 

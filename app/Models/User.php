@@ -48,8 +48,26 @@ class User extends Authenticatable
     }
 
     public function teams(){
-        return $this->belongsToMany(Team::class, 'memberships', 'user_id', 'model_id')
-            ->where('model_type', Team::class)
+        return $this->morphedByMany(Team::class, 'model', 'memberships')
             ->withPivot('role_id');
     }
+
+    public function projects(){
+        return $this->morphedByMany(Project::class, 'model', 'memberships')
+            ->withPivot('role_id');
+    }
+
+    public function createdProjects(){
+        return $this->hasMany(Project::class, 'user_id');
+    }
+
+    // public function roles(){
+    //     return $this->belongsToMany(Role::class, 'memberships', 'user_id', 'role_id')
+    //         ->withPivot('model_id', 'model_type');
+    // }
+
+    // public function users(){
+    //     return $this->
+    // }
+            
 }

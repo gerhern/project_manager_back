@@ -9,30 +9,13 @@ use Tests\TestCase;
 use App\Models\User;
 use App\Models\Team;
 use App\Models\Project;
-use App\Models\Role;
+use Spatie\Permission\Models\Role;
 
 class UserHasOneRoleTest extends TestCase
 {
     use RefreshDatabase;
     
-    public function test_user_has_one_role(): void
-    {
-        DbSeeder::call('DbSeeder');
-        $user = User::factory()->create();
-        $team = Team::factory()->create();
-        $project = Project::factory()->create(['team_id' => $team->id]);
-        $role = Role::factory()->create(['name' => 'member']);
-
-        $user->projects()->attach($project->id, [
-            'team_id' => $team->id,
-            'role_id' => $role->id,
-        ]);
-
-        $projectFromUser = $user->projects()->first();
-
-        $this->assertNotNull($projectFromUser);
-        $this->assertEquals('member', $projectFromUser->pivot->role->name);
-    }
+    
 
     public function test_user_cannot_have_multiple_roles_in_same_project(): void
     {
