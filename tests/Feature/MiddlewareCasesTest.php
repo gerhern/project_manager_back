@@ -2,64 +2,99 @@
 
 namespace Tests\Feature;
 
+use App\Enums\{ProjectStatus, ObjectiveStatus, TaskStatus};
+use App\Models\{Project, Task, Objective, Team, User};
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
-
-use App\Models\Team;
-use App\Models\User;
-use App\Models\Project;
-use App\Enums\ProjectStatus;
 
 class MiddlewareCasesTest extends TestCase
 {
-
     use RefreshDatabase;
 
-    public function test_cannot_modify_project_in_restricted_states(): void
-    {
+    /**
+     * @dataProvider RestrictedResourceProvider
+     */
+    public function test_cannot_modify_resources_in_restricted_states(string $modelClass, string $routeName, $status, $verb) :void{
         $team = Team::factory()->create();
         $user = User::factory()->create();
-        $restrictedStatuses = [
-            ProjectStatus::Completed,
-            ProjectStatus::Canceled,
-            ProjectStatus::CancelInProgress
-        ];
 
-        foreach ($restrictedStatuses as $status) {
-            $project = Project::factory()->create([
-                'team_id' => $team->id,
-                'user_id' => $user->id,
+        $resource = match($modelClass) {
+            Project::class => $modelClass::factory()->create([
+                'team_id' => $team->id, 'user_id' => $user->id, 'status' => $status
+            ]),
+
+            Objective::class => $modelClass::factory()->create([
+                'project_id' => Project::factory()->create(['team_id' => $team->id, 'user_id' => $user->id]),
                 'status' => $status
-            ]);
+            ]),
 
-            // Intentamos una operación de actualización (PUT)
-            $response = $this->actingAs($user)
-                            ->putJson("/api/projects/{$project}", [
-                                'name' => 'Nuevo Nombre'
-                            ]);
+            Task::class => (function() use ($modelClass, $team, $user, $status) {
+                $project = Project::factory()->create(['team_id' => $team->id, 'user_id' => $user->id]);
+                $objective = Objective::factory()->create(['project_id' => $project->id]);
+                return $modelClass::factory()->create(['objective_id' => $objective->id, 'status' => $status]);
+            })(),
+        };
 
-            // Assert: 403 Forbidden o 422 Unprocessable Entity
-            $response->assertStatus(403);
-            
-            // Opcional: Verificar que el mensaje de error sea descriptivo
-            $response->assertJsonPath('message', 'Project status does not allow modifications.');
-        }
+        $response = $this->actingAs($user)->json(
+            $verb, 
+            route($routeName, $resource), 
+            $verb === 'DELETE' ? [] : ['name' => 'Attempted Update']
+        );
+
+        $classNameModel = class_basename($modelClass);
+        $response->assertStatus(403);
+        $response->assertJson([
+            'message' => "Can't modify resource; {$classNameModel} is {$resource->status->name}"
+        ]);
     }
 
-    // public function test_can_modify_active_project(): void
-    // {
-    //     $user = User::factory()->create();
-    //     $project = Project::factory()->create([
-    //         'user_id' => $user->id,
-    //         'status' => ProjectStatus::Active
-    //     ]);
+    public static function restrictedResourceProvider(): array
+    {
+        return [
+            'Project is Canceled' => [
+                Project::class,
+                'project.update',
+                ProjectStatus::Canceled,
+                'PUT'
+            ],
+            'Project is Completed' => [
+                Project::class,
+                'project.update',
+                ProjectStatus::Completed,
+                'PATCH'
+            ],
+            'Project is CancelInProgress' => [
+                Project::class,
+                'project.update',
+                ProjectStatus::CancelInProgress,
+                'DELETE'
+            ],
+            'Objective is Completed' => [
+                Objective::class,
+                'objective.update',
+                ObjectiveStatus::Completed,
+                'PUT'
+            ],
+            'Objective is Canceled' => [
+                Objective::class,
+                'objective.update',
+                ObjectiveStatus::Canceled,
+                'PATCH'
+            ],
+            'Task is Completed' => [
+                Task::class,
+                'task.update',
+                TaskStatus::Completed,
+                'DELETE'
+            ],
+            'Task is Canceled' => [
+                Task::class,
+                'task.update',
+                TaskStatus::Canceled,
+                'PUT'
+            ],
+        ];
+    }
 
-    //     $response = $this->actingAs($user)
-    //                     ->putJson("/api/projects/{$project->id}", [
-    //                         'name' => 'Nombre Válido'
-    //                     ]);
-
-    //     $response->assertStatus(200);
-    // }
+    
 }

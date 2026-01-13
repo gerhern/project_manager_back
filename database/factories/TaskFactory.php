@@ -20,7 +20,6 @@ class TaskFactory extends Factory
             'title' => $this->faker->sentence,
             'description' => $this->faker->paragraph,
             'due_date' => $this->faker->date(),
-            'status' => 'pending',
         ];
     }
 }

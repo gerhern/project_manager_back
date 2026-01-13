@@ -15,16 +15,16 @@ class CheckStatus
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $params = $request->route()->parameters();
+        $resource = collect($request->route()->parameters())->first();
 
-        $model = reset($params);
+        if ($resource && isset($resource->status)) {
+            $restrictedNames = ['Canceled', 'Completed', 'CancelInProgress'];
 
-        dd($params, $model);
-
-        if ($model && in_array($model->status->value, $restrictedStatuses)) {
-            return response()->json([
-                'message' => "No puedes modificar este recurso en estado: {$model->status->name}"
-            ], 403);
+            if (in_array($resource->status->name, $restrictedNames)) {
+                return response()->json([
+                    'message' => "Can't modify resource in status: {$resource->status->name}"
+                ], 403);
+            }
         }
 
         return $next($request);

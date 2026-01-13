@@ -25,4 +25,13 @@ enum ObjectiveStatus
             self::Canceled => 'The objective has been canceled and will not be completed.',
         };
     }
+
+    public function isRestricted(): bool
+    {
+        return match ($this) {
+            self::Completed,
+            self::Canceled => true,
+            default => false,
+        };
+    }
 }

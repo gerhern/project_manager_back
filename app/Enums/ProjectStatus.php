@@ -28,4 +28,14 @@ enum ProjectStatus
             self::Completed => 'The project has been completed successfully.',
         };
     }
+
+    public function isRestricted(): bool
+    {
+        return match ($this) {
+            self::CancelInProgress,
+            self::Canceled,
+            self::Completed => true,
+            default => false,
+        };
+    }
 }

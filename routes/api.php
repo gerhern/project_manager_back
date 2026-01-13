@@ -2,10 +2,25 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Middleware\CheckStatus;
-use App\Http\Controllers\ProjectController;
+use App\Http\Middleware\{CheckStatus, EnsureHierarchyIsPermitted};
+use App\Http\Controllers\{ProjectController, ObjectiveController, TaskController};
 
-Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update')->middleware(CheckStatus::class);    
+
+//Projects
+Route::match(['PUT', 'PATCH', 'DELETE'], '/projects/{project}', [ProjectController::class, 'update'])
+    ->middleware(EnsureHierarchyIsPermitted::class)
+    ->name('project.update');
+
+//Objectives
+Route::match(['PUT', 'PATCH', 'DELETE'],'/objectives/{objective}', [ObjectiveController::class, 'update'])
+    ->middleware(EnsureHierarchyIsPermitted::class)
+    ->name('objective.update');
+
+//Tasks
+Route::match(['PUT', 'PATCH', 'DELETE'], '/tasks/{task}', [TaskController::class, 'update'])
+    ->middleware(EnsureHierarchyIsPermitted::class)
+    ->name('task.update');
+    
 // Route::get('/projects/test', function (Request $request) {
 //     return response()->json(['message' => 'API is working']);
 // });
