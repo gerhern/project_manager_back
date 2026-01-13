@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Project;
+use App\Models\{Project, ProjectDispute};
+use Illuminate\Support\Facades\Gate;
 
 class ProjectController extends Controller
 {
@@ -15,5 +16,15 @@ class ProjectController extends Controller
             'project' => $project
         ], 418);
         
+    }
+
+    public function resolveDispute(Request $request, ProjectDispute $dispute){
+
+        Gate::authorize('updateDisputeStatus', $dispute);
+
+        return response()->json([
+            'message' => 'Dispute resolved successfully',
+            'dispute' => $dispute
+        ], 418);
     }
 }

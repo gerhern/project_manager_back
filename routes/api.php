@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Middleware\{CheckStatus, EnsureHierarchyIsPermitted};
+use App\Http\Middleware\{ EnsureHierarchyIsPermitted};
 use App\Http\Controllers\{ProjectController, ObjectiveController, TaskController};
 
 
@@ -20,11 +20,8 @@ Route::match(['PUT', 'PATCH', 'DELETE'],'/objectives/{objective}', [ObjectiveCon
 Route::match(['PUT', 'PATCH', 'DELETE'], '/tasks/{task}', [TaskController::class, 'update'])
     ->middleware(EnsureHierarchyIsPermitted::class)
     ->name('task.update');
-    
-// Route::get('/projects/test', function (Request $request) {
-//     return response()->json(['message' => 'API is working']);
-// });
 
-// Route::get('/user', function (Request $request) {
-//     return $request->user(); 
-// })->middleware('auth:sanctum');
+//Disputes
+Route::match(['PUT', 'PATCH'], '/projects/dispute/{dispute}', [ProjectController::class, 'resolveDispute'])
+    ->name('dispute.resolve');
+

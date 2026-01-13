@@ -19,6 +19,7 @@ return new class extends Migration
             $table->enum('status', ['Pending', 'Assigned', 'In Progress', 'Completed', 'Canceled'])->default('Pending');
 
             $table->foreignId('objective_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }
