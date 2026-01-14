@@ -7,7 +7,8 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 use App\Models\{User, Team, Project, ProjectDispute, Objective, Task};
-use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\{Role, Permission};
+use Database\Seeders\RolesSeeder;
 use App\Enums\DisputeStatus;
 
 class PoliciesCasesTest extends TestCase
@@ -29,33 +30,40 @@ class PoliciesCasesTest extends TestCase
 
         $this->actingAs($projectOwner)
             ->putJson(route('dispute.resolve', $dispute), ['status' => DisputeStatus::Accepted])
-            ->assertStatus(418);
+            ->assertStatus(200);
     }
 
-    public function test_only_manager_can_cancel_tasks(){
-        $team = Team::factory()->create();
+    public function test_manager_and_user_can_update_status(){
+        
+        $this->seed(RolesSeeder::class);
+
         $manager = User::factory()->create();
-        Role::create(['name' => 'manager']);
-        Role::create(['name' => 'employee']);
-        $manager->assignRole('manager');
+        $manager->assignRole('Manager');
+        $employee = User::factory()->create();
+        $employee->assignRole('User');
+        $employeeB = User::factory()->create();
+        $employeeB->assignRole('User');
+        
+        $team = Team::factory()->create();
         $project = Project::factory()->create(['team_id' => $team->id, 'user_id' => $manager->id]);
         $objective = Objective::factory()->create(['project_id' => $project->id]);
-        $task = Task::factory()->create(['objective_id' => $objective->id, 'user_id' => $manager->id]);
-        $employee = User::factory()->create();
-        $employee->assignRole('employee');
+        $task = Task::factory()->create(['objective_id' => $objective->id, 'user_id' => $employee->id]);
 
-        $objective->refresh();
-        $task->refresh();
-        $project->refresh();
-
-        dd($task->status, $objective->status, $project->status);
 
         $this->actingAs($employee)
-            ->putJson(route('task.update', $task), ['status' => 'cancelled'])
+            ->putJson(route('task.updateStatus', $task), ['status' => 'Canceled'])
             ->assertStatus(403);
 
         $this->actingAs($manager)
-            ->putJson(route('task.update', $task), ['status' => 'cancelled'])
+            ->putJson(route('task.updateStatus', $task), ['status' => 'Canceled'])
             ->assertStatus(418);
+
+        $this->actingAs($employee)
+            ->putJson(route('task.updateStatus', $task), ['status' => 'Completed'])
+            ->assertStatus(418);
+
+        $this->actingAs($employeeB)
+            ->putJson(route('task.updateStatus', $task), ['status' => 'Completed'])
+            ->assertStatus(403);
     }
 }

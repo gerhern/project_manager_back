@@ -14,7 +14,7 @@ class ProjectController extends Controller
         return response()->json([
             'message' => 'Project updated successfully',
             'project' => $project
-        ], 418);
+        ], 200);
         
     }
 
@@ -25,6 +25,6 @@ class ProjectController extends Controller
         return response()->json([
             'message' => 'Dispute resolved successfully',
             'dispute' => $dispute
-        ], 418);
+        ], 200);
     }
 }
