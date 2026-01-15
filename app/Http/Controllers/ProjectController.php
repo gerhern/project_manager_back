@@ -10,6 +10,8 @@ class ProjectController extends Controller
 {
     public function update(Request $request, Project $project)
     {
+
+    Gate::authorize('updateProject', $project);
     
         return response()->json([
             'message' => 'Project updated successfully',

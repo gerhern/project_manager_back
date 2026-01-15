@@ -10,7 +10,8 @@ use App\Models\Task;
 class TaskController extends Controller
 {
     public function update(Request $request, Task $task){
-        // Update task logic here
+        
+        Gate::authorize('updateTask', $task);
 
         return response()->json([
             'message' => 'Task updated successfully',

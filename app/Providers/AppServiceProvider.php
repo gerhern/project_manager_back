@@ -4,8 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
-use App\Models\{ProjectDispute, Task};
-use App\Policies\{ProjectDisputePolicy, TaskPolicy};
+use App\Models\{ProjectDispute, Task, Objective, Project};
+use App\Policies\{ProjectDisputePolicy, TaskPolicy, ObjectivePolicy, ProjectPolicy};
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,5 +24,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(ProjectDispute::class, ProjectDisputePolicy::class);
         Gate::policy(Task::class, TaskPolicy::class);
+        Gate::policy(Objective::class, ObjectivePolicy::class);
+        Gate::policy(Project::class, ProjectPolicy::class);
     }
 }

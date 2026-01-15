@@ -19,8 +19,7 @@ class PoliciesCasesTest extends TestCase
         $projectOwner = User::factory()->create();
         $otherUser = User::factory()->create();
 
-        $team = Team::factory()->create();
-        $project = Project::factory()->create(['team_id' => $team->id, 'user_id' => $projectOwner->id]);
+        $project = Project::factory()->create(['user_id' => $projectOwner->id]);
 
         $dispute = ProjectDispute::factory()->create(['project_id' => $project->id, 'user_id' => $otherUser->id]);
 
@@ -44,8 +43,7 @@ class PoliciesCasesTest extends TestCase
         $employeeB = User::factory()->create();
         $employeeB->assignRole('User');
         
-        $team = Team::factory()->create();
-        $project = Project::factory()->create(['team_id' => $team->id, 'user_id' => $manager->id]);
+        $project = Project::factory()->create(['user_id' => $manager->id]);
         $objective = Objective::factory()->create(['project_id' => $project->id]);
         $task = Task::factory()->create(['objective_id' => $objective->id, 'user_id' => $employee->id]);
 
@@ -65,5 +63,40 @@ class PoliciesCasesTest extends TestCase
         $this->actingAs($employeeB)
             ->putJson(route('task.updateStatus', $task), ['status' => 'Completed'])
             ->assertStatus(403);
+    }
+
+    public function test_viewer_cant_update_anything(){
+        $this->seed(RolesSeeder::class);
+
+        $viewer = User::factory()->create()->assignRole('Viewer');
+        $employee = User::factory()->create()->assignRole('User');
+        $manager = User::factory()->create()->assignRole('Manager');
+
+        $project = Project::factory()->create(['user_id' => $employee->id]);
+        $objective = Objective::factory()->create(['project_id' => $project->id]);
+        $task = Task::factory()->create(['objective_id' => $objective->id]);
+
+        $this->actingAs($viewer);
+
+            $this->putJson(route('task.update', $task), ['status' => 'Completed'])
+            ->assertStatus(403);
+
+            $this->putJson(route('objective.update', $objective),['status' => 'Completed'])
+            ->assertStatus(403);
+
+            $this->putJson(route('project.update', $project), ['status' => 'Completed'])
+            ->assertStatus(403);
+
+        $this->actingAs($employee)
+            ->putJson(route('task.update', $task), ['description' => 'Testing'])
+            ->assertStatus(200);
+
+        $this->actingAs($manager);
+
+            $this->putJson(route('objective.update', $objective), ['description' => 'Testing'])
+            ->assertStatus(200);
+            
+            $this->putJson(route('project.update', $project), ['description' => 'Testing'])
+            ->assertStatus(200);
     }
 }

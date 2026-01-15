@@ -54,10 +54,9 @@ class CheckRelatedModelTest extends TestCase
 
     public function test_project_can_list_its_assigned_users_with_roles(): void
     {
-        $team = Team::factory()->create();
         $leader = User::factory()->create();
         $users = User::factory()->count(2)->create();
-        $project = Project::factory()->create(['team_id' => $team->id, 'user_id' => $leader->id]);
+        $project = Project::factory()->create(['user_id' => $leader->id]);
         $role = Role::create(['name' => 'contributor']);
 
         foreach ($users as $user) {
@@ -72,10 +71,9 @@ class CheckRelatedModelTest extends TestCase
 
     public function test_creator_is_distinct_from_assigned_members(): void
     {
-        $team = Team::factory()->create();
         $creator = User::factory()->create();
         $member = User::factory()->create();
-        $project = Project::factory()->create(['user_id' => $creator->id, 'team_id' => $team->id]);
+        $project = Project::factory()->create(['user_id' => $creator->id]);
 
         $role = Role::firstOrCreate(['name' => 'editor']);
         $project->users()->attach($member->id, ['role_id' => $role->id]);
@@ -89,9 +87,8 @@ class CheckRelatedModelTest extends TestCase
 
     public function test_tasks_are_strictly_isolated_by_their_objectives(): void
     {
-        $team = Team::factory()->create();
         $user = User::factory()->create();
-        $project = Project::factory()->create(['team_id' => $team->id, 'user_id' => $user->id]);
+        $project = Project::factory()->create(['user_id' => $user->id]);
 
         $objectiveA = Objective::factory()->create(['project_id' => $project->id]);
         $objectiveB = Objective::factory()->create(['project_id' => $project->id]);
