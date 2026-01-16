@@ -61,6 +61,7 @@ class User extends Authenticatable
         return $this->hasMany(Project::class, 'user_id');
     }
 
+
     // public function roles(){
     //     return $this->belongsToMany(Role::class, 'memberships', 'user_id', 'role_id')
     //         ->withPivot('model_id', 'model_type');

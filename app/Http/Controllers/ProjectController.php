@@ -29,4 +29,13 @@ class ProjectController extends Controller
             'dispute' => $dispute
         ], 200);
     }
+
+    public function show(Request $request, Project $project){
+        Gate::authorize('viewProject', $project);
+
+        return response()->json([
+            'project' => $project,
+            'message' => 'Project retrieved successfully',
+        ], 200);
+    }
 }

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\{ProjectStatus, ObjectiveStatus, TaskStatus};
 use App\Models\{Project, Task, Objective, Team, User};
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class MiddlewareCasesTest extends TestCase
@@ -96,5 +97,46 @@ class MiddlewareCasesTest extends TestCase
         ];
     }
 
+    public function test_only_members_of_project_can_view_project(): void {
+
+        $this->seed('RolesSeeder');
+
+        $team = Team::factory()->create();
+        $user = User::factory()->create()->assignRole('User');
+        $admin = User::factory()->create()->assignRole('Admin');
+        $stranger = User::factory()->create()->assignRole('User');
+        $member = User::factory()->create()->assignRole('Member');
+
+        $project = Project::factory()->create(['user_id' => $admin->id, 'team_id' => $team->id]);
+
+        $user->projects()->attach($project->id, [
+            'role_id' => Role::where('name',  'User')->first()->id
+        ]);
+
+        $admin->teams()->attach($team->id, [
+            'role_id' => Role::where('name', 'Admin')->first()->id
+        ]);
+        $member->teams()->attach($team->id, [
+            'role_id' => Role::where('name', 'Member')->first()->id
+        ]);
+
+        $this->actingAs($user)
+            ->getJson(route('project.show', $project))
+            ->assertStatus(200  );
+
+        $this->actingAs($admin)
+            ->getJson(route('project.show', $project))
+            ->assertStatus(200  );
+
+        $this->actingAs($member)
+            ->getJson(route('project.show', $project))
+            ->assertJsonFragment(['message' => "You can't access"])
+            ->assertStatus(403);
+
+        $this->actingAs($stranger)
+            ->getJson(route('project.show', $project))
+            ->assertJsonFragment(['message' => "You can't access"])
+            ->assertStatus(403);
+    }
     
 }
