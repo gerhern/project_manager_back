@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
@@ -9,14 +10,12 @@ use App\Models\Task;
 
 class TaskController extends Controller
 {
+    use ApiResponse;
     public function update(Request $request, Task $task){
         
         Gate::authorize('updateTask', $task);
 
-        return response()->json([
-            'message' => 'Task updated successfully',
-            'task' => $task,
-        ], 200);
+        return $this->sendApiResponse($task, 'Task updated successfully');
     }
 
 

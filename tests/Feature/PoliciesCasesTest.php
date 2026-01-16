@@ -79,24 +79,30 @@ class PoliciesCasesTest extends TestCase
         $this->actingAs($viewer);
 
             $this->putJson(route('task.update', $task), ['status' => 'Completed'])
-            ->assertStatus(403);
+            ->assertStatus(403)
+            ->assertJsonStructure(['success', 'message']);
 
             $this->putJson(route('objective.update', $objective),['status' => 'Completed'])
-            ->assertStatus(403);
+            ->assertStatus(403)
+            ->assertJsonStructure(['success', 'message']);
 
             $this->putJson(route('project.update', $project), ['status' => 'Completed'])
-            ->assertStatus(403);
+            ->assertStatus(403)
+            ->assertJsonStructure(['success', 'message']);
 
         $this->actingAs($employee)
             ->putJson(route('task.update', $task), ['description' => 'Testing'])
-            ->assertStatus(200);
+            ->assertStatus(200)
+            ->assertJsonStructure(['success', 'message']);
 
         $this->actingAs($manager);
 
             $this->putJson(route('objective.update', $objective), ['description' => 'Testing'])
-            ->assertStatus(200);
+            ->assertStatus(200)
+            ->assertJsonStructure(['success', 'message']);
             
             $this->putJson(route('project.update', $project), ['description' => 'Testing'])
-            ->assertStatus(200);
+            ->assertStatus(200)
+            ->assertJsonStructure(['success', 'message']);
     }
 }

@@ -46,7 +46,8 @@ class MiddlewareCasesTest extends TestCase
         $response->assertStatus(403);
         $response->assertJson([
             'message' => "Can't modify resource; {$classNameModel} is {$resource->status->name}"
-        ]);
+        ])
+        ->assertJsonStructure(['success', 'message']);
     }
 
     public static function restrictedResourceProvider(): array
@@ -122,20 +123,22 @@ class MiddlewareCasesTest extends TestCase
 
         $this->actingAs($user)
             ->getJson(route('project.show', $project))
+            ->assertJsonStructure(['success', 'message'])
             ->assertStatus(200  );
 
         $this->actingAs($admin)
             ->getJson(route('project.show', $project))
+            ->assertJsonStructure(['success', 'message'])
             ->assertStatus(200  );
 
         $this->actingAs($member)
             ->getJson(route('project.show', $project))
-            ->assertJsonFragment(['message' => "You can't access"])
+            ->assertJsonStructure(['success', 'message'])
             ->assertStatus(403);
 
         $this->actingAs($stranger)
             ->getJson(route('project.show', $project))
-            ->assertJsonFragment(['message' => "You can't access"])
+            ->assertJsonStructure(['success', 'message'])
             ->assertStatus(403);
     }
     

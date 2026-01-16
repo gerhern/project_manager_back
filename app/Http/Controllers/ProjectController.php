@@ -2,22 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use App\Models\{Project, ProjectDispute};
 use Illuminate\Support\Facades\Gate;
 
 class ProjectController extends Controller
 {
+    use ApiResponse;
     public function update(Request $request, Project $project)
     {
 
-    Gate::authorize('updateProject', $project);
-    
-        return response()->json([
-            'message' => 'Project updated successfully',
-            'project' => $project
-        ], 200);
+        Gate::authorize('updateProject', $project);
         
+        return $this->sendApiResponse($project, 'Project updated successfully');
     }
 
     public function resolveDispute(Request $request, ProjectDispute $dispute){
@@ -32,10 +30,6 @@ class ProjectController extends Controller
 
     public function show(Request $request, Project $project){
         Gate::authorize('viewProject', $project);
-
-        return response()->json([
-            'project' => $project,
-            'message' => 'Project retrieved successfully',
-        ], 200);
+        return $this->sendApiResponse($project, 'Project retrieved successfully');
     }
 }

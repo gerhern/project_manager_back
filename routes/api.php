@@ -3,7 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\{ EnsureHierarchyIsPermitted};
-use App\Http\Controllers\{ProjectController, ObjectiveController, TaskController};
+use App\Http\Controllers\{ProjectController, ObjectiveController, TaskController, TeamController};
 
 
 //Projects
@@ -36,4 +36,8 @@ Route::match(['PUT', 'PATCH', 'DELETE'], '/tasks/update-status/{task}', [TaskCon
 //Disputes
 Route::match(['PUT', 'PATCH'], '/projects/dispute/{dispute}', [ProjectController::class, 'resolveDispute'])
     ->name('dispute.resolve');
+
+//Teams
+Route::get('/teams/index', [TeamController::class, 'index'])
+    ->name('teams.index');
 

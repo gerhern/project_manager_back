@@ -38,4 +38,18 @@ class UserHasOneRoleTest extends TestCase
             'role_id' => $role2->id,
         ]);
     }
+
+    public function test_it_returns_404_in_standardized_format_when_model_not_found()
+    {
+        $user = User::factory()->create();
+        // Intentamos acceder a un proyecto inexistente
+        $this->actingAs($user)->getJson('/projects/999999')
+            ->assertStatus(404)
+            ->assertJson([
+                'success' => false,
+                'message' => 'Resource not found.'
+            ]);
+    }
+
+    
 }

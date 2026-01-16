@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 use App\Models\{Project, Objective, Task};
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class EnsureHierarchyIsPermitted
 {
@@ -25,9 +26,7 @@ class EnsureHierarchyIsPermitted
 
         if ($errorModel) {
             $errorModelName = class_basename($errorModel);
-            return response()->json([
-                'message' => "Can't modify resource; {$errorModelName} is {$errorModel->status->name}"
-            ], 403);
+            throw new AccessDeniedHttpException("Can't modify resource; {$errorModelName} is {$errorModel->status->name}");
         }
 
         return $next($request);

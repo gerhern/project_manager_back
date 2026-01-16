@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Middleware;
-
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,6 +21,8 @@ class CheckStatus
 
             if (in_array($resource->status->name, $restrictedNames)) {
                 return response()->json([
+                    'success' => false,
+                    'data' => [],
                     'message' => "Can't modify resource in status: {$resource->status->name}"
                 ], 403);
             }
