@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TeamStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -13,6 +14,10 @@ class Team extends Model
     protected $fillable = [
         'name',
         'description',
+    ];
+
+    protected $casts = [
+        'status' => TeamStatus::class,
     ];
 
     public function members(){

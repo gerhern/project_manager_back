@@ -40,4 +40,9 @@ Route::match(['PUT', 'PATCH'], '/projects/dispute/{dispute}', [ProjectController
 //Teams
 Route::get('/teams/index', [TeamController::class, 'index'])
     ->name('teams.index');
+Route::post('/teams/create', [TeamController::class, 'store'])
+    ->name('teams.store');
+Route::match(['PUT', 'PATCH'], '/teams/update/{team}', [TeamController::class, 'update'])
+    ->middleware(EnsureHierarchyIsPermitted::class)
+    ->name('teams.update');
 

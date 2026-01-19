@@ -32,6 +32,8 @@ class RolesSeeder extends Seeder
         Permission::create(['name' => 'updateObjective']);
         Permission::create(['name' => 'updateProject']);
 
+        Permission::create(['name' => 'updateTeam']);
+
         //Assign Permissions to Roles
         $managerRole = Role::where('name', 'Manager')->first();
 
@@ -44,5 +46,8 @@ class RolesSeeder extends Seeder
         $userRole->givePermissionTo('completeTask');
         $userRole->givePermissionTo('updateTask');
         $userRole->givePermissionTo('updateObjective');
+
+        $adminRole = Role::where('name', 'Admin')->first();
+        $adminRole->givePermissionTo('updateTeam');
     }
 }

@@ -56,6 +56,7 @@ class EnsureHierarchyIsPermitted
             return $this->hasRestrictedAncestors($model->project);
         }
 
+
         return null;
     }
 }

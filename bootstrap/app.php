@@ -4,7 +4,9 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 
@@ -19,6 +21,15 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+
+    $exceptions->render(function (ValidationException $e, $request) {
+        return response()->json([
+            'success' => false,
+            'message' => 'The given data was invalid.',
+            'errors'  => $e->errors(),
+        ], 422);
+    });
+    
         // Error 403
     $exceptions->render(function (AccessDeniedHttpException $e, $request) {
         return response()->json([
@@ -41,6 +52,15 @@ return Application::configure(basePath: dirname(__DIR__))
             'success' => false,
             'message' => "Resource not found.",
         ], 404);
+    });
+
+    $exceptions->render(function (Throwable $e, $request) {
+        if ($request->is('api/*')) {
+            return response()->json([
+                'success' => false,
+                'message' => config('app.debug') ? $e->getMessage() : 'Server Error.',
+            ], 500);
+        }
     });
         //
     })->create();

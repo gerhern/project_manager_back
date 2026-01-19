@@ -2,8 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Enums\{ProjectStatus, ObjectiveStatus, TaskStatus};
+use App\Enums\{ProjectStatus, ObjectiveStatus, TaskStatus, TeamStatus};
 use App\Models\{Project, Task, Objective, Team, User};
+use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -139,6 +140,26 @@ class MiddlewareCasesTest extends TestCase
         $this->actingAs($stranger)
             ->getJson(route('project.show', $project))
             ->assertJsonStructure(['success', 'message'])
+            ->assertStatus(403);
+    }
+
+    public function test_only_active_status_can_be_updated():void {
+        $this->seed(RolesSeeder::class);
+
+        $user = User::factory()->create()->assignRole('Admin');
+        $roleId = Role::where('name', 'Admin')->first()->id;
+        $teamA = Team::factory()->create(['status' => TeamStatus::Active]);
+        $teamB = Team::factory()->create(['status' => TeamStatus::Inactive]);
+
+        $user->teams()->attach($teamA->id, ['role_id' => $roleId]);
+        $user->teams()->attach($teamB->id, ['role_id' => $roleId]);
+
+        $response = $this->actingAs($user)
+            ->putJson(route('teams.update', $teamA), ['name' => 'newName']);
+            $response->assertStatus(200);
+
+        $this->actingAs($user)
+            ->putJson(route('teams.update', $teamB), ['name' => 'newName'])
             ->assertStatus(403);
     }
     
