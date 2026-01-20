@@ -8,17 +8,19 @@ use App\Models\Project;
 use App\Models\ProjectDispute;
 use App\Models\Team;
 use App\Models\User;
+use App\Traits\SetTestingData;
+use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class CheckScopesOnModelsTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, SetTestingData;
+
 
     public function test_scope_argue_find_cases(): void
     {
-        $team = Team::factory()->create();
-        $user = User::factory()->create();
+        [$user, $team] = $this->createProject();
         $activeProject = Project::factory()->create(['status' => ProjectStatus::Active, 'team_id' => $team->id, 'user_id' => $user->id]);
         $cancelledProject = Project::factory()->create(['status' => ProjectStatus::Canceled, 'team_id' => $team->id, 'user_id' => $user->id]);
         $targetProject = Project::factory()->create(['status' => ProjectStatus::Completed, 'team_id' => $team->id, 'user_id' => $user->id]);
@@ -37,8 +39,7 @@ class CheckScopesOnModelsTest extends TestCase
 
     public function test_scope_disput_table_has_data(): void
     {
-        $team = Team::factory()->create();
-        $user = User::factory()->create();
+        [$user, $team] = $this->createTeam();
         $projectWithDispute = Project::factory()->create(['status' => ProjectStatus::CancelInProgress, 'team_id' => $team->id, 'user_id' => $user->id]);
         $projectWithClosedDispute = Project::factory()->create(['status' => ProjectStatus::Active, 'team_id' => $team->id, 'user_id' => $user->id]);
         $projectWithoutDispute = Project::factory()->create(['status' => ProjectStatus::Active, 'team_id' => $team->id, 'user_id' => $user->id]);
@@ -57,8 +58,8 @@ class CheckScopesOnModelsTest extends TestCase
             'expired_at' => now()->subDays(1),
         ]);
 
-        $this->assertTrue($projectWithDispute->hasOpenDispute(), 'Falló: El proyecto debería reconocer la disputa abierta.');
-        $this->assertFalse($projectWithClosedDispute->hasOpenDispute(), 'Falló: El proyecto no debería reconocer una disputa cerrada como abierta.');
-        $this->assertFalse($projectWithoutDispute->hasOpenDispute(), 'Falló: El proyecto sin registros reporta una disputa inexistente.');
+        $this->assertTrue($projectWithDispute->hasOpenDispute());
+        $this->assertFalse($projectWithClosedDispute->hasOpenDispute());
+        $this->assertFalse($projectWithoutDispute->hasOpenDispute());
     }
 }

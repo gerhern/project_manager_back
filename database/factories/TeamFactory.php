@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\TeamStatus;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -19,6 +20,7 @@ class TeamFactory extends Factory
         return [
             'name' => $this->faker->company(),
             'description' => $this->faker->sentence(),
+            'status' => TeamStatus::Active
         ];
     }
 }

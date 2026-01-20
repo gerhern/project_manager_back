@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Enums\TeamStatus;
 use App\Models\Team;
 use App\Models\User;
+use App\Traits\SetTestingData;
 use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -12,44 +14,40 @@ use Tests\TestCase;
 
 class TeamControllerTest extends TestCase
 {
-    use RefreshDatabase;
-
-    private Role $adminRole;
-    private Role $memberRole;
+    use RefreshDatabase, SetTestingData ;
 
     protected function setUp(): void {
         parent::setUp();
-
         $this->seed(RolesSeeder::class);
-        $this->adminRole = Role::where('name', 'Admin')->first();
-        $this->memberRole = Role::where('name', 'Member')->first();
     }
 
     public function test_user_can_only_see_their_teams(): void
     {
         $teamAdmin = Team::factory()->create();
         $teamMember = Team::factory()->create();
-        Team::factory()->create();
+        Team::factory(2)->create();
         $user = User::factory()->create();
 
-        $user->teams()->attach($teamAdmin->id, ['role_id' => $this->adminRole->id]);
-        $user->teams()->attach($teamMember->id, ['role_id' => $this->memberRole->id]);
+        $this->addUserToTeam($teamAdmin, $user, 'Admin');
+        $this->addUserToTeam($teamMember, $user, 'Member');
 
         $response = $this->actingAs($user)
             ->getJson(route('teams.index'));
 
-        $response->assertJsonStructure([
-            'success',
-            'data',
-            'message'
-        ])->assertJson([
-                    'success' => true,
-                    'message' => 'Data Retrieved Successfuly'
-                ])
-            ->assertStatus(200);
+        $response = $this->actingAs($user)
+        ->getJson(route('teams.index'));
 
-        $this->assertEquals($teamAdmin->name, $response->json('data.0.name'));
+        $response->assertStatus(200)
+            ->assertJsonCount(2, 'data')
+            ->assertJson([
+                'success' => true,
+                'message' => 'Data Retrieved Successfuly'
+            ]);
+        $teamIds = collect($response->json('data'))->pluck('id')->toArray();
+        $this->assertContains($teamAdmin->id, $teamIds);
+        $this->assertContains($teamMember->id, $teamIds);
 
+        $this->assertCount(2, $teamIds);
     }
 
     public function test_user_can_create_a_team_and_become_admin(): void
@@ -70,7 +68,7 @@ class TeamControllerTest extends TestCase
             'user_id' => $user->id,
             'model_id' => $team->id,
             'model_type' => Team::class,
-            'role_id' => $this->adminRole->id
+            'role_id' => $this->getRole('Admin')->id
         ]);
     }
 
@@ -107,11 +105,9 @@ class TeamControllerTest extends TestCase
     public function test_valid_user_can_update_team_data(): void
     {
         $adminUser = User::factory()->create()->assignRole('Admin');
-        $otherUser = User::factory()->create();
         $team = Team::factory()->create(['name' => 'first name']);
 
-        $adminUser->teams()->attach($team->id, ['role_id' => $this->adminRole->id]);
-        $otherUser->teams()->attach($team->id, ['role_id' => $this->memberRole->id]);
+        $this->addUserToTeam($team, $adminUser, 'Admin');
 
         $this->actingAs($adminUser)
             ->putJson(route('teams.update', $team), ['name' => 'new name'])
@@ -123,12 +119,10 @@ class TeamControllerTest extends TestCase
     }
 
     public function test_invalid_user_can_not_update_team():void {
-        $adminUser = User::factory()->create();
         $otherUser = User::factory()->create();
         $team = Team::factory()->create(['name' => 'first name']);
 
-        $adminUser->teams()->attach($team->id, ['role_id' => $this->adminRole->id]);
-        $otherUser->teams()->attach($team->id, ['role_id' => $this->memberRole->id]);
+        $this->addUserToTeam($team, $otherUser, 'Member');
 
         $this->actingAs($otherUser)
             ->putJson(route('teams.update', $team), ['name' => 'third name'])
@@ -139,6 +133,26 @@ class TeamControllerTest extends TestCase
         $this->assertDatabaseMissing('teams', ['name' => 'third name']);
     }
 
+    public function test_only_owner_can_update_status(): void {
+        [$owner, $team] = $this->createTeam();
+        $stranger = User::factory()->create();
+        $this->addUserToTeam($team, $owner, 'Owner');
 
+        $this->actingAs($stranger)
+            ->deleteJson(route('teams.inactive', $team))
+            ->assertStatus(403)
+            ->assertJsonStructure(['success', 'message'])
+            ->assertJson(['success' => false]);
+
+        $this->assertDatabaseHas('teams', ['id' => $team->id,'status' => TeamStatus::Active->name]);
+
+        $this->actingAs($owner)
+            ->deleteJson(route('teams.inactive', $team))
+            ->assertStatus(200)
+            ->assertJsonStructure(['success', 'data', 'message'])
+            ->assertJson(['success' => true]);
+
+        $this->assertDatabaseHas('teams', ['id' => $team->id,'status' => TeamStatus::Inactive->name]);
+    }
 
 }

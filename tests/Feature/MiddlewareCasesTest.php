@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\{ProjectStatus, ObjectiveStatus, TaskStatus, TeamStatus};
 use App\Models\{Project, Task, Objective, Team, User};
+use App\Traits\SetTestingData;
 use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -11,16 +12,18 @@ use Tests\TestCase;
 
 class MiddlewareCasesTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, SetTestingData;
 
     /**
      * @dataProvider RestrictedResourceProvider
      */
     public function test_cannot_modify_resources_in_restricted_states(string $modelClass, string $routeName, $status, $verb) :void{
-        $team = Team::factory()->create();
-        $user = User::factory()->create();
+ 
+       [$user, $team] = $this->createProject();
 
         $resource = match($modelClass) {
+            Team::class => $modelClass::factory()->create(['status' => $status]),
+
             Project::class => $modelClass::factory()->create([
                 'team_id' => $team->id, 'user_id' => $user->id, 'status' => $status
             ]),
@@ -54,6 +57,12 @@ class MiddlewareCasesTest extends TestCase
     public static function restrictedResourceProvider(): array
     {
         return [
+            'Team is Inactive' => [
+                Team::class,
+                'teams.inactive',
+                TeamStatus::Inactive,
+                'DELETE'
+            ],
             'Project is Canceled' => [
                 Project::class,
                 'project.update',
@@ -103,24 +112,15 @@ class MiddlewareCasesTest extends TestCase
 
         $this->seed('RolesSeeder');
 
-        $team = Team::factory()->create();
-        $user = User::factory()->create()->assignRole('User');
+        [$user, $team, $project] = $this->createProject();
+        $user->assignRole('User');
         $admin = User::factory()->create()->assignRole('Admin');
         $stranger = User::factory()->create()->assignRole('User');
         $member = User::factory()->create()->assignRole('Member');
 
-        $project = Project::factory()->create(['user_id' => $admin->id, 'team_id' => $team->id]);
-
-        $user->projects()->attach($project->id, [
-            'role_id' => Role::where('name',  'User')->first()->id
-        ]);
-
-        $admin->teams()->attach($team->id, [
-            'role_id' => Role::where('name', 'Admin')->first()->id
-        ]);
-        $member->teams()->attach($team->id, [
-            'role_id' => Role::where('name', 'Member')->first()->id
-        ]);
+        $this->addUserToProject($project, $user, 'User');
+        $this->addUserToTeam($team, $admin, 'Admin');
+        $this->addUserToTeam($team, $member, 'Member');
 
         $this->actingAs($user)
             ->getJson(route('project.show', $project))
@@ -146,13 +146,14 @@ class MiddlewareCasesTest extends TestCase
     public function test_only_active_status_can_be_updated():void {
         $this->seed(RolesSeeder::class);
 
-        $user = User::factory()->create()->assignRole('Admin');
-        $roleId = Role::where('name', 'Admin')->first()->id;
-        $teamA = Team::factory()->create(['status' => TeamStatus::Active]);
-        $teamB = Team::factory()->create(['status' => TeamStatus::Inactive]);
+        [$user, $teamA] = $this->createTeam();
 
-        $user->teams()->attach($teamA->id, ['role_id' => $roleId]);
-        $user->teams()->attach($teamB->id, ['role_id' => $roleId]);
+        $user->assignRole('Admin');
+
+        [, $teamB] = $this->createTeam(['status' => TeamStatus::Inactive]);
+
+        $this->addUserToTeam($teamA, $user);
+        $this->addUserToTeam($teamB, $user);
 
         $response = $this->actingAs($user)
             ->putJson(route('teams.update', $teamA), ['name' => 'newName']);

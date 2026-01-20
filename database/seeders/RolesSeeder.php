@@ -15,6 +15,7 @@ class RolesSeeder extends Seeder
     public function run(): void
     {
         //Team Roles
+        Role::create(['name' => 'Owner']);
         Role::create(['name' => 'Admin']);
         Role::create(['name' => 'Member']);
 
@@ -33,6 +34,7 @@ class RolesSeeder extends Seeder
         Permission::create(['name' => 'updateProject']);
 
         Permission::create(['name' => 'updateTeam']);
+        Permission::create(['name' => 'inactiveTeam']);
 
         //Assign Permissions to Roles
         $managerRole = Role::where('name', 'Manager')->first();
@@ -49,5 +51,8 @@ class RolesSeeder extends Seeder
 
         $adminRole = Role::where('name', 'Admin')->first();
         $adminRole->givePermissionTo('updateTeam');
+
+        $ownerRole = Role::where('name', 'Owner')->first();
+        $ownerRole->givePermissionTo('inactiveTeam');
     }
 }

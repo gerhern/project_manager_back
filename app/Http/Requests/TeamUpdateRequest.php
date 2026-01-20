@@ -8,7 +8,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 use Spatie\Permission\Models\Role;
 
-class TeamUpdateRequest extends FormRequest
+class   TeamUpdateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -41,10 +41,7 @@ class TeamUpdateRequest extends FormRequest
                 Rule::unique('teams', 'name')->ignore($teamId),
             ],
             'description' => 'nullable|string|max:1000',
-            'status' => [
-                'nullable',
-                new Enum(TeamStatus::class)
-            ],
+            'status' => 'prohibited'
         ];
     }
 }

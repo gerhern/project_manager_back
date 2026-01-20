@@ -45,4 +45,7 @@ Route::post('/teams/create', [TeamController::class, 'store'])
 Route::match(['PUT', 'PATCH'], '/teams/update/{team}', [TeamController::class, 'update'])
     ->middleware(EnsureHierarchyIsPermitted::class)
     ->name('teams.update');
+Route::delete('teams/inactive/{team}', [TeamController::class, 'inactiveTeam'])
+    ->middleware(EnsureHierarchyIsPermitted::class)
+    ->name('teams.inactive');
 

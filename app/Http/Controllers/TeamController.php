@@ -7,6 +7,7 @@ use App\Http\Requests\TeamStoreRequest;
 use App\Http\Requests\TeamUpdateRequest;
 use App\Models\Team;
 use App\Traits\ApiResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\Models\Role;
@@ -19,7 +20,7 @@ class TeamController extends Controller
         return $this->sendApiResponse($teams, "Data Retrieved Successfuly", 200);
     }
 
-    public function store(TeamStoreRequest $request){
+    public function store(TeamStoreRequest $request): JsonResponse{
         try{
             \DB::beginTransaction();
             $adminRoleId = Role::where('name', 'Admin')->first('id')->id;
@@ -44,7 +45,7 @@ class TeamController extends Controller
         }
     }
 
-    public function update(TeamUpdateRequest $request, Team $team){
+    public function update(TeamUpdateRequest $request, Team $team): JsonResponse{
         Gate::authorize('updateTeam', $team);
         try{
             $team->update($request->validated());
@@ -54,6 +55,15 @@ class TeamController extends Controller
             \Log::error('Error, can not updated team: '.$e->getMessage());
             return $this->sendApiError('Error, can not updated team', 403);
         }
-
     }
+
+    public function inactiveTeam(Request $request, Team $team): JsonResponse {
+        Gate::authorize('inactiveTeam', $team);
+
+        $team->update(['status' => TeamStatus::Inactive->name]);
+
+        return $this->sendApiResponse([],'Team inactivated successfully');
+    }
+
+    
 }

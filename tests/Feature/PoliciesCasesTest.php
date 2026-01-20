@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Traits\SetTestingData;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
@@ -13,13 +14,11 @@ use App\Enums\DisputeStatus;
 
 class PoliciesCasesTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, SetTestingData;
 
     public function test_only_leader_can_resolve_disputes(){
-        $projectOwner = User::factory()->create();
         $otherUser = User::factory()->create();
-
-        $project = Project::factory()->create(['user_id' => $projectOwner->id]);
+        [$projectOwner,, $project] = $this->createProject();
 
         $dispute = ProjectDispute::factory()->create(['project_id' => $project->id, 'user_id' => $otherUser->id]);
 
@@ -36,15 +35,11 @@ class PoliciesCasesTest extends TestCase
         
         $this->seed(RolesSeeder::class);
 
-        $manager = User::factory()->create();
+        [$manager,,, $objective] = $this->createObjective();
         $manager->assignRole('Manager');
-        $employee = User::factory()->create();
-        $employee->assignRole('User');
-        $employeeB = User::factory()->create();
-        $employeeB->assignRole('User');
+        $employee = User::factory()->create()->assignRole('User');
+        $employeeB = User::factory()->create()->assignRole('User');
         
-        $project = Project::factory()->create(['user_id' => $manager->id]);
-        $objective = Objective::factory()->create(['project_id' => $project->id]);
         $task = Task::factory()->create(['objective_id' => $objective->id, 'user_id' => $employee->id]);
 
 
@@ -72,8 +67,8 @@ class PoliciesCasesTest extends TestCase
         $employee = User::factory()->create()->assignRole('User');
         $manager = User::factory()->create()->assignRole('Manager');
 
-        $project = Project::factory()->create(['user_id' => $employee->id]);
-        $objective = Objective::factory()->create(['project_id' => $project->id]);
+        [,, $project, $objective] = $this->createObjective([], ['user_id' => $employee->id]);
+
         $task = Task::factory()->create(['objective_id' => $objective->id]);
 
         $this->actingAs($viewer);

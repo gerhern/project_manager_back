@@ -58,7 +58,7 @@ class CheckRelatedModelTest extends TestCase
 
         $users = User::factory()->count(2)->create();
 
-        [$leader, $team, $project] = $this->createProject();
+        [,, $project] = $this->createProject();
         $role = $this->getRole('User');
 
         foreach ($users as $user) {
@@ -74,7 +74,7 @@ class CheckRelatedModelTest extends TestCase
     {
         $this->seed(RolesSeeder::class);
         $member = User::factory()->create();
-        [$creator, $team, $project] = $this->createProject();
+        [$creator,, $project] = $this->createProject();
 
         $this->addUserToProject($project, $creator);
 
@@ -87,7 +87,7 @@ class CheckRelatedModelTest extends TestCase
 
     public function test_tasks_are_strictly_isolated_by_their_objectives(): void
     {
-        [$user, $team, $project, $objectiveA] = $this->createObjective();
+        [,, $project, $objectiveA] = $this->createObjective();
         $objectiveB = $this->createNewObjetiveOnProject($project);
 
         $tasksForA = Task::factory()->count(3)->create(['objective_id' => $objectiveA->id]);
