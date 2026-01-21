@@ -2,9 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\Team;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
-use App\Models\{ProjectDispute, Task, Objective, Project, Teamt};
+use App\Models\{ProjectDispute, Task, Objective, Project};
 use App\Policies\{ProjectDisputePolicy, TaskPolicy, ObjectivePolicy, ProjectPolicy, TeamPolicy};
 
 class AppServiceProvider extends ServiceProvider

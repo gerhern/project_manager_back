@@ -65,19 +65,19 @@ class MiddlewareCasesTest extends TestCase
             ],
             'Project is Canceled' => [
                 Project::class,
-                'project.update',
+                'projects.update',
                 ProjectStatus::Canceled,
                 'PUT'
             ],
             'Project is Completed' => [
                 Project::class,
-                'project.update',
+                'projects.update',
                 ProjectStatus::Completed,
                 'PATCH'
             ],
             'Project is CancelInProgress' => [
                 Project::class,
-                'project.update',
+                'projects.update',
                 ProjectStatus::CancelInProgress,
                 'DELETE'
             ],

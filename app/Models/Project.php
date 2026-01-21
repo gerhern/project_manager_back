@@ -17,45 +17,61 @@ class Project extends Model
         'status' => ProjectStatus::class,
     ];
 
-    public function users(){
+    protected $fillable = [
+        'name',
+        'description',
+        'team_id',
+        'user_id'
+    ];
+
+    public function users()
+    {
         return $this->morphToMany(User::class, 'model', 'memberships')
+            ->using(Membership::class)
             ->withPivot('role_id');
     }
 
-    public function creator(){
+    public function creator()
+    {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function team(){
+    public function team()
+    {
         return $this->belongsTo(Team::class, 'team_id');
     }
 
-    public function tasks(){
+    public function tasks()
+    {
         return $this->hasMany(Task::class);
     }
 
-    public function objectives(){
+    public function objectives()
+    {
         return $this->hasMany(Objective::class);
     }
 
-    public function disputes(){
+    public function disputes()
+    {
         return $this->hasMany(ProjectDispute::class);
     }
 
-    public function hasOpenDispute(){
+    public function hasOpenDispute()
+    {
         return $this->disputes()->where('status', DisputeStatus::Open)->exists();
     }
 
+    public function members()
+    {
+        return $this->morphToMany(User::class, 'model', 'memberships')
+            ->using(Membership::class)
+            ->withPivot('role_id');
+    }
+
     //Scopes
-    public function scopeCompleted($query){
+    public function scopeCompleted($query)
+    {
         return $query->where('status', ProjectStatus::Completed);
     }
 
-
-    // public function scopeActiveDisputes($query){
-    //     return $query->where('status', ProjectStatus::CancelInProgress)
-    //                  ->whereHas('disputes', function($q){
-    //                      $q->where('status', DisputeStatus::Open);
-    //                  });
-    // }
 }

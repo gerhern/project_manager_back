@@ -2,23 +2,80 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ProjectStatus;
+use App\Http\Requests\ProjectStoreRequest;
+use App\Http\Requests\ProjectUpdateRequest;
 use App\Traits\ApiResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\{Project, ProjectDispute};
 use Illuminate\Support\Facades\Gate;
+use Spatie\Permission\Models\Role;
 
 class ProjectController extends Controller
 {
     use ApiResponse;
-    public function update(Request $request, Project $project)
-    {
 
-        Gate::authorize('updateProject', $project);
-        
-        return $this->sendApiResponse($project, 'Project updated successfully');
+    /**
+     * Retrieves every project linked to logged user
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $projects = $request->user()->projects()->withPivot('role_id')->get();
+        return $this->sendApiResponse($projects, 'Projects retrieved successfully');
     }
 
-    public function resolveDispute(Request $request, ProjectDispute $dispute){
+    /**
+     * Create new Project on database, only team admin can create new projects
+     * @param ProjectStoreRequest $request
+     * @return void
+     */
+    public function store(ProjectStoreRequest $request): JsonResponse
+    {
+        try {
+            \DB::beginTransaction();
+            $managerRoleId = Role::where('name', 'Manager')->first('id')->id;
+            $project = Project::create([
+                'name' => $request->name,
+                'description' => $request->description ?? null,
+                'status' => ProjectStatus::Active,
+                'team_id' => $request->team_id,
+                'user_id' => $request->user()->id
+            ]);
+
+            $request->user()->projects()->attach($project->id, [
+                'role_id' => $managerRoleId
+            ]);
+
+            \DB::commit();
+            return $this->sendApiResponse($project, 'Project created successfully', 201);
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+
+            \Log::error('Error creating project: ' . $e->getMessage());
+            return $this->sendApiError('Could not create project', 500);
+        }
+
+    }
+    public function update(ProjectUpdateRequest $request, Project $project)
+    {
+        Gate::authorize('updateProject', $project);
+
+        try{
+            $project->update($request->validated());
+            return $this->sendApiResponse($project, 'Project updated successfully', 200);
+
+        }catch(\Exception $e){
+            \Log::error('Error, can not update project: '.$e->getMessage());
+            return $this->sendApiError('Error, can not update project', 403);
+        }
+    }
+
+    public function resolveDispute(Request $request, ProjectDispute $dispute)
+    {
 
         Gate::authorize('updateDisputeStatus', $dispute);
 
@@ -28,7 +85,8 @@ class ProjectController extends Controller
         ], 200);
     }
 
-    public function show(Request $request, Project $project){
+    public function show(Request $request, Project $project)
+    {
         Gate::authorize('viewProject', $project);
         return $this->sendApiResponse($project, 'Project retrieved successfully');
     }

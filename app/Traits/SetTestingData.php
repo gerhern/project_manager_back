@@ -13,6 +13,14 @@ use Spatie\Permission\Models\Role;
 
 trait SetTestingData
 {
+    /**
+     * Create objects Project, Team and User, assign created user as a owner of project and assign project on projects list's team
+     * This function uses createTeam() function; This function only create and links users using pivot user_id on projects and teams
+     * NOT links using memberships table
+     * @param array $attributesProject Array of projects' attributes override default factory values'
+     * @param array $attributesTeam Array of teams' attributes override default factorycvalues'
+     * @return array<mixed|Project|\Illuminate\Database\Eloquent\Collection<int, Project>>
+     */
     public function createProject(array $attributesProject = [], array $attributesTeam = []): array
     {
 
@@ -36,12 +44,24 @@ trait SetTestingData
         $user->projects()->attach($project->id, ['role_id' => $rolId]);
     }
 
+    /**
+     * create a new register on memberships table linking user with teams 
+     * @param Team $team New user will be added to this $team
+     * @param User $user User to add to the provided team
+     * @param string $rolName The user will be added to the team with this role (Role must exists)
+     * @return void
+     */
     public function addUserToTeam(Team $team, User $user, string $rolName = 'Admin'): void
     {
         $rolId = Role::where('name', $rolName)->first()->id;
         $user->teams()->attach($team->id, ['role_id' => $rolId]);
     }
     
+    /**
+     * Retrieves a role model by role name
+     * @param string $rolname Role name must be the same for a existing role
+     * @return Role|null
+     */
     public function getRole(string $rolname): Role
     {
         return Role::where('name', $rolname)->first();
@@ -76,6 +96,11 @@ trait SetTestingData
         ]);
     }
 
+    /**
+     * Creates a User and Team objects, they don't related, just two single models
+     * @param array $attributes array of attributes to override factory default
+     * @return array<Team|User|\Illuminate\Database\Eloquent\Collection<int, Team>|\Illuminate\Database\Eloquent\Collection<int, User>>
+     */
     public function createTeam(array $attributes = []): array
     {
         $user = User::factory()->create();

@@ -2,24 +2,22 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\TeamStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Enum;
 use Spatie\Permission\Models\Role;
 
-class   TeamUpdateRequest extends FormRequest
+class ProjectUpdateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        $teamId = $this->route('team')->id;
+        $project = $this->route('project');
 
-        return $this->user()->teams()
-            ->where('model_id', $teamId)
-            ->wherePivot('role_id', Role::where('name', 'Admin')->value('id'))
+        return $this->user()->projects()
+            ->where('model_id', $project->id)
+            ->wherePivot('role_id', Role::where('name', 'Manager')->value('id'))
             ->exists();
     }
 
@@ -30,14 +28,14 @@ class   TeamUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        $teamId = $this->route('team')->id;
+        $project = $this->route('project');
         return [
             'name' => [
                 'required',
                 'string',
                 'min:3',
                 'max:255',
-                Rule::unique('teams', 'name')->ignore($teamId),
+                Rule::unique('projects', 'name')->ignore($project->id),
             ],
             'description' => 'nullable|string|max:1000',
             'status' => 'prohibited'

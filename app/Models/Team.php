@@ -21,9 +21,15 @@ class Team extends Model
         'status' => TeamStatus::class,
     ];
 
-    public function members(){
-        return $this->belongsToMany(User::class, 'memberships', 'model_id', 'user_id')
-            ->where('model_type', Team::class)
-            ->withPivot('role_id');
+    public function members()
+    {
+        return $this->morphToMany(User::class, 'model', 'memberships')
+            ->using(Membership::class)
+            ->withPivot('role_id')
+            ->withTimestamps();
     }
+
+//     public function roles(){
+//         return $this->morphedByMany()
+//     }
 }

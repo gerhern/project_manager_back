@@ -7,9 +7,16 @@ use App\Http\Controllers\{ProjectController, ObjectiveController, TaskController
 
 
 //Projects
+Route::get('/projects/index', [ProjectController::class, 'index'])
+    ->name('projects.index');
+
+Route::post('/projects/store', [ProjectController::class, 'store'])
+    ->middleware(EnsureHierarchyIsPermitted::class)
+    ->name('projects.store');
+
 Route::match(['PUT', 'PATCH', 'DELETE'], '/projects/{project}', [ProjectController::class, 'update'])
     ->middleware(EnsureHierarchyIsPermitted::class)
-    ->name('project.update');
+    ->name('projects.update');
 
 Route::get('/projects/show/{project}', [ProjectController::class, 'show'])
     ->middleware(EnsureHierarchyIsPermitted::class)
@@ -40,11 +47,14 @@ Route::match(['PUT', 'PATCH'], '/projects/dispute/{dispute}', [ProjectController
 //Teams
 Route::get('/teams/index', [TeamController::class, 'index'])
     ->name('teams.index');
+
 Route::post('/teams/create', [TeamController::class, 'store'])
     ->name('teams.store');
+
 Route::match(['PUT', 'PATCH'], '/teams/update/{team}', [TeamController::class, 'update'])
     ->middleware(EnsureHierarchyIsPermitted::class)
     ->name('teams.update');
+
 Route::delete('teams/inactive/{team}', [TeamController::class, 'inactiveTeam'])
     ->middleware(EnsureHierarchyIsPermitted::class)
     ->name('teams.inactive');

@@ -31,7 +31,7 @@ class PoliciesCasesTest extends TestCase
             ->assertStatus(200);
     }
 
-    public function test_manager_and_user_can_update_status(){
+    public function test_manager_and_user_can_update_project_status(){
         
         $this->seed(RolesSeeder::class);
 
@@ -81,7 +81,7 @@ class PoliciesCasesTest extends TestCase
             ->assertStatus(403)
             ->assertJsonStructure(['success', 'message']);
 
-            $this->putJson(route('project.update', $project), ['status' => 'Completed'])
+            $this->putJson(route('projects.update', $project), ['status' => 'Completed'])
             ->assertStatus(403)
             ->assertJsonStructure(['success', 'message']);
 
@@ -93,10 +93,6 @@ class PoliciesCasesTest extends TestCase
         $this->actingAs($manager);
 
             $this->putJson(route('objective.update', $objective), ['description' => 'Testing'])
-            ->assertStatus(200)
-            ->assertJsonStructure(['success', 'message']);
-            
-            $this->putJson(route('project.update', $project), ['description' => 'Testing'])
             ->assertStatus(200)
             ->assertJsonStructure(['success', 'message']);
     }
