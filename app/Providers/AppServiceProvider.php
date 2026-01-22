@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Team;
+use App\Observers\ObjectiveObserver;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use App\Models\{ProjectDispute, Task, Objective, Project};
@@ -28,5 +29,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Objective::class, ObjectivePolicy::class);
         Gate::policy(Project::class, ProjectPolicy::class);
         Gate::policy(Team::class, TeamPolicy::class);
+
+        Objective::observe(ObjectiveObserver::class);
     }
 }

@@ -6,6 +6,7 @@ use App\Enums\ProjectStatus;
 use App\Enums\TeamStatus;
 use App\Models\Objective;
 use App\Models\Project;
+use App\Models\Task;
 use App\Models\Team;
 use App\Models\User;
 use Database\Seeders\RolesSeeder;
@@ -91,8 +92,6 @@ trait SetTestingData
             [$user, $team, $project] = $this->createProject([],$user, $team);
         }
 
-        
-
         $objective = Objective::factory()->create(array_merge([
             'project_id' => $project->id
         ], $attributes));
@@ -126,5 +125,18 @@ trait SetTestingData
         $team = Team::factory()->create($attributes);
 
         return [$user, $team];
+    }
+
+    public function createTask(array $attributes = [], User $user = null, Team $team = null, Project $project = null, Objective $objective = null): array {
+        
+        if(!$objective){
+            [$user, $team, $project, $objective] = $this->createObjective([], $user, $team, $project);
+        }
+
+        $task = Task::factory()->create(array_merge([
+            'objective_id' => $objective->id
+        ], $attributes));
+
+        return [$user, $team, $project, $objective, $task];
     }
 }
