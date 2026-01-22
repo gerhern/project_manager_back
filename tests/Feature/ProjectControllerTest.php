@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Enums\DisputeStatus;
 use App\Enums\ProjectStatus;
+use App\Http\Controllers\ProjectController;
 use App\Models\Project;
+use App\Models\ProjectDispute;
 use App\Models\User;
 use App\Traits\SetTestingData;
 use Database\Seeders\RolesSeeder;
@@ -153,6 +155,22 @@ class ProjectControllerTest extends TestCase
             ->assertStatus(200);
 
         $this->assertDatabaseHas('projects', ['status' => ProjectStatus::Canceled->name]);
+    }
+
+    public function test_owner_update_dispute_project_status(): void {
+        [$owner, $team, $project] = $this->createProject();
+        $user = User::factory()->create();
+        $dispute = $this->createDispute($project, $user);
+
+        $this->actingAs($user)
+            ->putJson(route('dispute.resolve', $dispute), ['status' => DisputeStatus::Accepted])
+            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, PPDUDS']);
+
+        $this->actingAs($owner)
+            ->putJson(route('dispute.resolve', $dispute), ['status' => DisputeStatus::Accepted])
+            ->assertJson(['success' => true, 'message' => 'Dispute resolved successfully']);
+        
+        $this->assertDatabaseHas('project_disputes', ['project_id' => $project->id, 'status' => DisputeStatus::Accepted]);
     }
 
  }

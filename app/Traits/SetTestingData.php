@@ -2,13 +2,16 @@
 
 namespace App\Traits;
 
+use App\Enums\DisputeStatus;
 use App\Enums\ProjectStatus;
 use App\Enums\TeamStatus;
 use App\Models\Objective;
 use App\Models\Project;
+use App\Models\ProjectDispute;
 use App\Models\Task;
 use App\Models\Team;
 use App\Models\User;
+use Carbon\Carbon;
 use Database\Seeders\RolesSeeder;
 use Spatie\Permission\Models\Role;
 
@@ -138,5 +141,14 @@ trait SetTestingData
         ], $attributes));
 
         return [$user, $team, $project, $objective, $task];
+    }
+
+    public function createDispute(Project $project, User $user): ProjectDispute {
+        return ProjectDispute::create([
+            'project_id'    => $project->id,
+            'user_id'       => $user->id,
+            'expired_at'    => Carbon::now()->addDays(15)->toTimeString(),
+            'status'        => DisputeStatus::Open->name
+        ]);
     }
 }

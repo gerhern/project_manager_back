@@ -21,6 +21,7 @@ class ProjectDispute extends Model
         'project_id',
         'user_id',
         'expired_at',
+        'status'
     ];
 
     public function project(){

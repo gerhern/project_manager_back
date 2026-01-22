@@ -78,15 +78,13 @@ class ProjectController extends Controller
         }
     }
 
-    public function resolveDispute(Request $request, ProjectDispute $dispute)
+    public function resolveDispute(Request $request, ProjectDispute $dispute): JsonResponse
     {
-
         Gate::authorize('updateDisputeStatus', $dispute);
 
-        return response()->json([
-            'message' => 'Dispute resolved successfully',
-            'dispute' => $dispute
-        ], 200);
+        $dispute->update(['status' => DisputeStatus::Accepted]);
+
+        return $this->sendApiResponse($dispute, 'Dispute resolved successfully');
     }
 
     public function show(Request $request, Project $project)
