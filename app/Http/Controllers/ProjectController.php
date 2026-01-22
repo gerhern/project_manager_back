@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\DisputeStatus;
 use App\Enums\ProjectStatus;
 use App\Http\Requests\ProjectStoreRequest;
 use App\Http\Requests\ProjectUpdateRequest;
+use App\Models\Team;
 use App\Traits\ApiResponse;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\{Project, ProjectDispute};
@@ -34,6 +37,7 @@ class ProjectController extends Controller
      */
     public function store(ProjectStoreRequest $request): JsonResponse
     {
+        Gate::authorize('createProject', Team::find($request->team_id));
         try {
             \DB::beginTransaction();
             $managerRoleId = Role::where('name', 'Manager')->first('id')->id;
@@ -89,5 +93,30 @@ class ProjectController extends Controller
     {
         Gate::authorize('viewProject', $project);
         return $this->sendApiResponse($project, 'Project retrieved successfully');
+    }
+
+    public function cancel(Request $request, Project $project): JsonResponse {
+        Gate::authorize('cancelProject', $project);
+
+        if($request->user()->id === $project->user_id){
+            $project->update([
+                'status' => ProjectStatus::Canceled->name
+            ]);
+
+            return $this->sendApiResponse($project, 'The project has been canceled successfully');
+        }
+
+        ProjectDispute::create([
+            'project_id'    => $project->id,
+            'user_id'       => $request->user()->id,
+            'expired_at'    => Carbon::now()->addDays(15)->toTimeString(),
+            'status'        => DisputeStatus::Open->name
+        ]);
+
+        $project->update([
+                'status' => ProjectStatus::CancelInProgress->name
+            ]);
+
+        return $this->sendApiResponse($project, 'An open dispute has been created');
     }
 }

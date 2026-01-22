@@ -67,7 +67,7 @@ class PoliciesCasesTest extends TestCase
         $employee = User::factory()->create()->assignRole('User');
         $manager = User::factory()->create()->assignRole('Manager');
 
-        [,, $project, $objective] = $this->createObjective([], ['user_id' => $employee->id]);
+        [,, $project, $objective] = $this->createObjective([], $employee);
 
         $task = Task::factory()->create(['objective_id' => $objective->id]);
 
@@ -81,7 +81,7 @@ class PoliciesCasesTest extends TestCase
             ->assertStatus(403)
             ->assertJsonStructure(['success', 'message']);
 
-            $this->putJson(route('projects.update', $project), ['status' => 'Completed'])
+            $this->putJson(route('projects.update', $project), ['name' => 'new name'])
             ->assertStatus(403)
             ->assertJsonStructure(['success', 'message']);
 

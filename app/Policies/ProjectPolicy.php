@@ -2,12 +2,18 @@
 
 namespace App\Policies;
 
-use App\Models\{User, Project};
+use App\Models\{Membership, User, Project};
 use Illuminate\Auth\Access\Response;
 use Spatie\Permission\Models\Role;
 
 class ProjectPolicy
 {
+    /**
+     * User only can see the project if user is owner, team admin or user is linked to project
+     * @param User $user
+     * @param Project $project
+     * @return Response
+     */
     public function viewProject(User $user, Project $project){
         
         //Owner can see their own project
@@ -33,16 +39,46 @@ class ProjectPolicy
             return Response::allow();
         }
 
-        return Response::deny("You can't access");
+        return Response::deny("This action is unauthorized, PPVP", 403);
     }
 
+    /**
+     * Only manager can update project data
+     * @param User $user
+     * @param Project $project
+     * @return Response
+     */
     public function updateProject(User $user, Project $project): Response {
-        $managerRole = Role::where('name', 'Manager')->first();
-        $permission = $user->projects()
+        $hasRole = Membership::where('user_id', $user->id)
             ->where('model_id', $project->id)
-            ->wherePivot('role_id',$managerRole->id)
+            ->where('model_type', Project::class)
+            ->whereHas('role', function($q) {
+                $q->where('name', 'Manager');
+            })
             ->exists();
         
-        return $permission ? Response::allow() : Response::deny("Operation denied", 403); 
+        return $hasRole ? Response::allow() : Response::deny("This action is unauthorized, PPUP", 403); 
+    }
+
+    /**
+     * Only owner or project manager can try to update project's status to cancel
+     * @param User $user
+     * @param Project $project
+     * @return Response
+     */
+    public function cancelProject(User $user, Project $project): Response {
+        if($user->id === $project->user_id){
+            return Response::allow();
+        }
+
+        $hasRole = Membership::where('user_id', $user->id)
+            ->where('model_id', $project->id)
+            ->where('model_type', Project::class)
+            ->whereHas('role', function($q) {
+                $q->where('name', 'Manager');
+            })
+            ->exists();
+        
+            return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, PPCP', 403);
     }
 }

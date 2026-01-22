@@ -13,12 +13,7 @@ class ProjectUpdateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        $project = $this->route('project');
-
-        return $this->user()->projects()
-            ->where('model_id', $project->id)
-            ->wherePivot('role_id', Role::where('name', 'Manager')->value('id'))
-            ->exists();
+        return true;
     }
 
     /**

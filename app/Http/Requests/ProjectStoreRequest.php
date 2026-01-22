@@ -19,7 +19,7 @@ class ProjectStoreRequest extends FormRequest
             return false;
         }
 
-        return Gate::allows('createProject', $team);
+        return true;
     }
 
     /**

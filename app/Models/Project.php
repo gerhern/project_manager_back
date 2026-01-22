@@ -21,7 +21,8 @@ class Project extends Model
         'name',
         'description',
         'team_id',
-        'user_id'
+        'user_id',
+        'status'
     ];
 
     public function users()

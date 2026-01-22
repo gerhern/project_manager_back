@@ -17,6 +17,12 @@ class ProjectDispute extends Model
         'status' => DisputeStatus::class
     ];
 
+    protected $fillable = [
+        'project_id',
+        'user_id',
+        'expired_at',
+    ];
+
     public function project(){
         return $this->belongsTo(Project::class);
     }

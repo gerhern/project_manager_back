@@ -13,6 +13,29 @@ use Spatie\Permission\Models\Role;
 
 trait SetTestingData
 {
+
+    protected static array $testingRoles = [];
+
+    protected function getCachedRoleId(string $name): int
+    {
+        if (!isset(self::$testingRoles[$name])) {
+            self::$testingRoles[$name] = Role::where('name', $name)->firstOrFail()->id;
+        }
+        return self::$testingRoles[$name];
+    }
+
+    public function setRoles(... $roleList): void{
+
+        foreach ($roleList as $roleName) { 
+            Role::create(['name' => $roleName]);
+        }
+    }
+
+    public function createUserWithRole(string $role): User{
+        return User::factory()->create()->assignRole($role);
+    }
+
+
     /**
      * Create objects Project, Team and User, assign created user as a owner of project and assign project on projects list's team
      * This function uses createTeam() function; This function only create and links users using pivot user_id on projects and teams
@@ -21,27 +44,23 @@ trait SetTestingData
      * @param array $attributesTeam Array of teams' attributes override default factorycvalues'
      * @return array<mixed|Project|\Illuminate\Database\Eloquent\Collection<int, Project>>
      */
-    public function createProject(array $attributesProject = [], array $attributesTeam = []): array
+    public function createProject(array $attributesProject = [], User $user = null, Team $team = null): array
     {
-
-        [$user, $team] = $this->createTeam($attributesTeam);
-
-        $defaultAttributes = [
-            'user_id' => $user->id,
-            'team_id' => $team->id
-        ];
+        $user ??= User::factory()->create();
+        $team ??= Team::factory()->create();
 
         $project = Project::factory()->create(
-            array_merge($defaultAttributes, $attributesProject)
-        );
+            array_merge([
+                'user_id' => $user->id,
+                'team_id' => $team->id
+            ], $attributesProject));
 
         return [$user, $team, $project];
     }
 
     public function addUserToProject(Project $project, User $user, string $rolName = 'Manager'): void
     {
-        $rolId = Role::where('name', $rolName)->first()->id;
-        $user->projects()->attach($project->id, ['role_id' => $rolId]);
+        $user->projects()->attach($project->id, ['role_id' => $this->getCachedRoleId($rolName)]);
     }
 
     /**
@@ -53,8 +72,7 @@ trait SetTestingData
      */
     public function addUserToTeam(Team $team, User $user, string $rolName = 'Admin'): void
     {
-        $rolId = Role::where('name', $rolName)->first()->id;
-        $user->teams()->attach($team->id, ['role_id' => $rolId]);
+        $user->teams()->attach($team->id, ['role_id' => $this->getCachedRoleId($rolName)]);
     }
     
     /**
@@ -67,16 +85,17 @@ trait SetTestingData
         return Role::where('name', $rolname)->first();
     }
 
-    public function createObjective(array $attributesObjective = [], array $attributesProject = [], array $attributesTeam = []): array
+    public function createObjective(array $attributes = [], User $user = null, Project $project = null, Team $team = null): array
     {
-        [$user, $team, $project] = $this->createProject($attributesProject,$attributesTeam);
-        $defaultAttributes = [
-            'project_id' => $project->id
-        ];
+        if(!$project){
+            [$user, $team, $project] = $this->createProject([],$user, $team);
+        }
 
-        $objective = Objective::factory()->create(
-            array_merge($defaultAttributes, $attributesObjective)
-        );
+        
+
+        $objective = Objective::factory()->create(array_merge([
+            'project_id' => $project->id
+        ], $attributes));
 
         return [$user, $team, $project, $objective];
     }

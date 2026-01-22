@@ -6,6 +6,7 @@ use App\Models\Membership;
 use App\Models\Team;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
+use Illuminate\Auth\Access\Response;
 
 class TeamPolicy
 {
@@ -39,14 +40,16 @@ class TeamPolicy
      * @param Team $team
      * @return void
      */
-    public function createProject(User $user, Team $team): bool {
+    public function createProject(User $user, Team $team): Response {
 
-        return Membership::where('user_id', $user->id)
+        $hasRoles = Membership::where('user_id', $user->id)
         ->where('model_id', $team->id)
         ->where('model_type', Team::class)
         ->whereHas('role', function($q) {
             $q->whereIn('name', ['Admin', 'Owner']);
         })
         ->exists();
+
+        return $hasRoles ? Response::allow() : Response::deny('This action is unauthorized, TPCP', 403); 
     }
 }

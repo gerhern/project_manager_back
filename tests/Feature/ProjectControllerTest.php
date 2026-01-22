@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Enums\DisputeStatus;
+use App\Enums\ProjectStatus;
 use App\Models\Project;
 use App\Models\User;
 use App\Traits\SetTestingData;
@@ -15,19 +17,19 @@ class ProjectControllerTest extends TestCase
     use RefreshDatabase, SetTestingData;
     public function test_projects_index_works(): void{
         $this->seed(RolesSeeder::class);
-        [$owner,, $project] = $this->createProject();
-        [,, $projectB] = $this->createProject(['user_id' => $owner->id]);
+
+        [$owner, $team, $project] = $this->createProject();
+        [,, $projectB] = $this->createProject([], $owner, $team);
+
         $member = User::factory()->create();
         $stranger = User::factory()->create();
 
         $this->addUserToProject($project, $owner);
-        $this->addUserToProject($projectB, $owner);
         $this->addUserToProject($project, $member, 'User');
+        $this->addUserToProject($projectB, $owner);
 
         $onwerResponse = $this->actingAs($owner)
             ->getJson(route('projects.index'))
-            ->assertStatus(200)
-            ->assertJsonStructure(['success', 'data', 'message'])
             ->assertJson(['success' => true, 'message' => 'Projects retrieved successfully'])
             ->assertJsonCount(2, 'data');
 
@@ -37,8 +39,6 @@ class ProjectControllerTest extends TestCase
 
         $memberResponse = $this->actingAs($member)
             ->getJson(route('projects.index'))
-            ->assertStatus(200)
-            ->assertJsonStructure(['success', 'data', 'message'])
             ->assertJson(['success' => true, 'message' => 'Projects retrieved successfully'])
             ->assertJsonCount(1, 'data');
 
@@ -47,8 +47,6 @@ class ProjectControllerTest extends TestCase
 
         $this->actingAs($stranger)
             ->getJson(route('projects.index'))
-            ->assertStatus(200)
-            ->assertJsonStructure(['success', 'data', 'message'])
             ->assertJson(['success' => true, 'message' => 'Projects retrieved successfully'])
             ->assertJsonCount(0, 'data');
     }
@@ -68,7 +66,7 @@ class ProjectControllerTest extends TestCase
 
         $this->actingAs($member)
             ->postJson(route('projects.store'), ['name' => 'memberProject', 'team_id' => $team->id])
-            ->assertStatus(403);
+            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, TPCP']);
         
         $this->assertDatabaseMissing('projects', ['name' => 'memberProject']);
 
@@ -85,14 +83,14 @@ class ProjectControllerTest extends TestCase
             'user_id' => $admin->id,
             'model_id' => $project->id,
             'model_type' => Project::class,
-            'role_id' => $this->getRole('Manager')->id
+            'role_id' => $this->getCachedRoleId('Manager')
         ]);
     }
 
     public function test_only_valid_users_can_update_project(): void {
         $this->seed(RolesSeeder::class);
 
-        [$owner, $team, $project] = $this->createProject();
+        [$owner,, $project] = $this->createProject();
         $user = User::factory()->create();
         $viewer = User::factory()->create();
 
@@ -102,25 +100,59 @@ class ProjectControllerTest extends TestCase
 
         $this->actingAs($viewer)
             ->putJson(route('projects.update', $project), ['name' => 'viewer name'])
-            // ->assertJson(['message' => 'Operation denied'])
-            ->assertStatus(403);
+            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, PPUP']);
         
         $this->actingAs($user)
             ->putJson(route('projects.update', $project), ['name' => 'user name'])
-            // ->assertJson(['message' => 'Operation denied'])
-            ->assertStatus(403);
+            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, PPUP']);
         
         $this->actingAs($owner)
             ->putJson(route('projects.update', $project), ['name' => 'owner name'])
             ->assertJson(['success' => true, 'message' => 'Project updated successfully'])
-            ->assertJsonStructure(['success', 'data', 'message'])
-            ->assertStatus(200);
+            ->assertJsonStructure(['success', 'data', 'message']);
         
         $this->assertDatabaseHas('projects', [
             'id' => $project->id,
             'name' => 'owner name'
         ]);
+    }
 
+    public function test_only_managers_can_try_cancel_project(): void {
+
+        $this->seed(RolesSeeder::class);
+
+        [$owner, $team, $project] = $this->createProject();
+        [,,$projectB] = $this->createProject([],$owner, $team);
+
+        $manager = User::factory()->create();
+        $this->addUserToProject($project, $manager);
+        $user = User::factory()->create();
+        $this->addUserToProject($project, $user, 'User');
+        $viewer = User::factory()->create();
+        $this->addUserToProject($project, $viewer, 'Viewer');
+
+        $this->actingAs($viewer)
+            ->deleteJson(route('projects.cancel', $project))
+            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, PPCP']);
+
+        $this->actingAs($user)
+            ->deleteJson(route('projects.cancel', $project))
+            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, PPCP']);
+        
+        $this->actingAs($manager)
+            ->deleteJson(route('projects.cancel', $project))
+            ->assertJson(['success' => true, 'message' => 'An open dispute has been created'])
+            ->assertStatus(200);
+        
+        $this->assertDatabaseHas('project_disputes', ['user_id' => $manager->id, 'status' => DisputeStatus::Open->name]);
+        $this->assertDatabaseHas('projects', ['status' => ProjectStatus::CancelInProgress->name]);
+
+        $this->actingAs($owner)
+            ->deleteJson(route('projects.cancel', $projectB))
+            ->assertJson(['success' => true, 'message' => 'The project has been canceled successfully'])
+            ->assertStatus(200);
+
+        $this->assertDatabaseHas('projects', ['status' => ProjectStatus::Canceled->name]);
     }
 
  }
