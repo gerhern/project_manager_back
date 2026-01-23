@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\{Project, ProjectDispute};
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
 
 class ProjectController extends Controller
@@ -82,9 +83,32 @@ class ProjectController extends Controller
     {
         Gate::authorize('updateDisputeStatus', $dispute);
 
-        $dispute->update(['status' => DisputeStatus::Accepted]);
+        $request->validate([
+            'status' => [
+                'required',
+                Rule::in(DisputeStatus::resolutionStates())
+            ]
+        ]);
 
-        return $this->sendApiResponse($dispute, 'Dispute resolved successfully');
+        try {
+            \DB::beginTransaction();
+
+            $isAccepted = $request->status === DisputeStatus::Accepted->name;
+    
+            $dispute->project->update([
+                'status' => $isAccepted ? ProjectStatus::Canceled : ProjectStatus::Active
+            ]);
+    
+            $dispute->update(['status' => $request->status]);
+
+            \Db::commit();
+    
+            return $this->sendApiResponse($dispute, 'Dispute '. ($isAccepted ? 'resolved' : 'rejected') . ' successfully');
+        }catch(\Exception $e){
+            \Db::rollBack();
+            \Log::error('Error trying to close dispute: '.$e->getMessage());
+            return $this->sendApiError('Error trying to close dispute');
+        }
     }
 
     public function show(Request $request, Project $project)

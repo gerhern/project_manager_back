@@ -38,4 +38,11 @@ enum ProjectStatus
             default => false,
         };
     }
+
+    public static function completedStates(){
+        return [
+            self::Canceled->name,
+            self::Completed->name
+        ];
+    }
 }

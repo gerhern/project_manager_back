@@ -27,7 +27,7 @@ class PoliciesCasesTest extends TestCase
             ->assertStatus(403);
 
         $this->actingAs($projectOwner)
-            ->putJson(route('dispute.resolve', $dispute), ['status' => DisputeStatus::Accepted])
+            ->putJson(route('dispute.resolve', $dispute), ['status' => DisputeStatus::Accepted->name])
             ->assertStatus(200);
     }
 

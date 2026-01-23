@@ -28,4 +28,11 @@ enum DisputeStatus
             self::Expired => 'The dispute period has expired without resolution.',
         };
     }
+
+    public static function resolutionStates(): array {
+        return [
+            self::Accepted->name,
+            self::Rejected->name
+        ];
+    }
 }

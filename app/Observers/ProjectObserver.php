@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\enums\ObjectiveStatus;
 use App\Enums\ProjectStatus;
+use App\Models\Objective;
 use App\Models\Project;
 
 class ProjectObserver
@@ -13,7 +14,10 @@ class ProjectObserver
             if($project->status === ProjectStatus::Canceled){
                 $project->objectives()
                     ->whereNotIn('status', [ObjectiveStatus::Canceled, ObjectiveStatus::Completed])
-                    ->update(['status' =>  ObjectiveStatus::Canceled->name]);
+                    ->each(function(Objective $objective){
+                        $objective->update(['status' =>  ObjectiveStatus::Canceled->name]);
+                    });
+                    
             }
         }
     }

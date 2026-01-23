@@ -158,19 +158,50 @@ class ProjectControllerTest extends TestCase
     }
 
     public function test_owner_update_dispute_project_status(): void {
-        [$owner, $team, $project] = $this->createProject();
+        [$owner, $team, $project] = $this->createProject(['status' => ProjectStatus::CancelInProgress]);
+
         $user = User::factory()->create();
         $dispute = $this->createDispute($project, $user);
 
         $this->actingAs($user)
-            ->putJson(route('dispute.resolve', $dispute), ['status' => DisputeStatus::Accepted])
+            ->putJson(route('dispute.resolve', $dispute), ['status' => DisputeStatus::Accepted->name])
             ->assertJson(['success' => false, 'message' => 'This action is unauthorized, PPDUDS']);
 
         $this->actingAs($owner)
-            ->putJson(route('dispute.resolve', $dispute), ['status' => DisputeStatus::Accepted])
+            ->putJson(route('dispute.resolve', $dispute), ['status' => DisputeStatus::Rejected->name])
+            ->assertJson(['success' => true, 'message' => 'Dispute rejected successfully']);
+
+        $this->assertDatabaseHas('projects', ['status' => ProjectStatus::Active]);
+        $this->assertDatabaseHas('project_disputes', ['project_id' => $project->id, 'status' => DisputeStatus::Rejected->name]);
+
+        $project->update(['status' => ProjectStatus::CancelInProgress]);
+        $disputeB = $this->createDispute($project, $user);
+        
+        $this->actingAs($owner)
+            ->putJson(route('dispute.resolve', $disputeB), ['status' => DisputeStatus::Accepted->name])
             ->assertJson(['success' => true, 'message' => 'Dispute resolved successfully']);
         
         $this->assertDatabaseHas('project_disputes', ['project_id' => $project->id, 'status' => DisputeStatus::Accepted]);
+    }
+
+    public function test_rejected_dispute_cant_be_reopened(): void {
+        [,, $project] = $this->createProject(['status' => ProjectStatus::Active]);
+        $user = User::factory()->create();
+        $dispute = $this->createDispute( $project, $user, DisputeStatus::Rejected);
+
+        $this->actingAs($user)
+            ->putJson(route('dispute.resolve', $dispute), [DisputeStatus::Rejected])
+            ->assertJson(['success' => false, 'message' => 'This dispute has already been resolved, PPDUDS']);
+    }
+
+    public function test_canceled_project_cant_update_dispute_status():void {
+        [,, $project] = $this->createProject(['status' => ProjectStatus::Canceled->name]);
+        $user = User::factory()->create();
+        $dispute = $this->createDispute($project, $user);
+
+        $this->actingAs($user)
+            ->putJson(route('dispute.resolve', $dispute), [DisputeStatus::Accepted])
+            ->assertJson(['success' => false, 'message' => 'This project is inactive, PPDUDS']);
     }
 
  }

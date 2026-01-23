@@ -89,7 +89,7 @@ trait SetTestingData
         return Role::where('name', $rolname)->first();
     }
 
-    public function createObjective(array $attributes = [], User $user = null, Project $project = null, Team $team = null): array
+    public function createObjective(array $attributes = [], User $user = null, Team $team = null, Project $project = null): array
     {
         if(!$project){
             [$user, $team, $project] = $this->createProject([],$user, $team);
@@ -143,12 +143,12 @@ trait SetTestingData
         return [$user, $team, $project, $objective, $task];
     }
 
-    public function createDispute(Project $project, User $user): ProjectDispute {
+    public function createDispute(Project $project, User $user, $status = DisputeStatus::Open): ProjectDispute {
         return ProjectDispute::create([
             'project_id'    => $project->id,
             'user_id'       => $user->id,
             'expired_at'    => Carbon::now()->addDays(15)->toTimeString(),
-            'status'        => DisputeStatus::Open->name
+            'status'        => $status->name
         ]);
     }
 }
