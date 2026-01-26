@@ -34,9 +34,9 @@ Route::post('/projects/{project}/objectives/store', [ObjectiveController::class,
     ->middleware(EnsureHierarchyIsPermitted::class)
     ->name('projects.objectives.store');
 
-Route::match(['PUT', 'PATCH', 'DELETE'],'/objectives/{objective}', [ObjectiveController::class, 'update'])
+Route::match(['PUT', 'PATCH'],'projects/{project}/objectives/{objective}', [ObjectiveController::class, 'update'])
     ->middleware(EnsureHierarchyIsPermitted::class)
-    ->name('objective.update');
+    ->name('projects.objectives.update');
 
 //Tasks
 Route::match(['PUT', 'PATCH', 'DELETE'], '/tasks/{task}', [TaskController::class, 'update'])

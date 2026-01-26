@@ -77,7 +77,7 @@ class PoliciesCasesTest extends TestCase
             ->assertStatus(403)
             ->assertJsonStructure(['success', 'message']);
 
-            $this->putJson(route('objective.update', $objective),['status' => 'Completed'])
+            $this->putJson(route('projects.objectives.update', [$project, $objective]),['title' => 'Completed'])
             ->assertStatus(403)
             ->assertJsonStructure(['success', 'message']);
 
@@ -92,7 +92,7 @@ class PoliciesCasesTest extends TestCase
 
         $this->actingAs($manager);
 
-            $this->putJson(route('objective.update', $objective), ['description' => 'Testing'])
+            $this->putJson(route('projects.objectives.update', [$project, $objective]), ['title' => 'Testing'])
             ->assertStatus(200)
             ->assertJsonStructure(['success', 'message']);
     }

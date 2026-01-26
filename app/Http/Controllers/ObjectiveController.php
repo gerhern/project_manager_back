@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\enums\ObjectiveStatus;
 use App\Http\Requests\ObjectiveStoreRequest;
+use App\Http\Requests\ObjectiveUpdateRequest;
 use App\Models\Project;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -38,9 +39,21 @@ class ObjectiveController extends Controller
         return $this->sendApiResponse($objective, 'Objective created successfully', 201);
     }
 
-    public function update(Request $request, Objective $objective){
+    public function update(ObjectiveUpdateRequest $request, Project $project, Objective $objective){
 
-        Gate::authorize('updateObjective', $objective);
-        return $this->sendApiResponse($objective, 'Objective updated successfully');
+        Gate::authorize('updateObjective', [$objective, $project]);
+
+        try{
+            \DB::beginTransaction();
+            $objective->update($request->validated());
+            \DB::commit();
+            return $this->sendApiResponse($objective, 'Objective updated successfully');
+        }catch(\Exception $e){
+            \Log::error('Error updating objective: ' . $e->getMessage());
+            \DB::rollBack();
+            return $this->sendApiError('Error updating objective');
+        }
+
+
     }
 }

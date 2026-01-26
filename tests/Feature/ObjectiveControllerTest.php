@@ -80,7 +80,7 @@ class ObjectiveControllerTest extends TestCase
             ->postJson(route('projects.objectives.store', $project), [
                 'title' => 'viewer objective',
                 'project_id' => $project->id
-            ])->assertJson(['success' => false, 'message' => 'This action is unauthorized, OPCO']);
+            ])->assertJson(['success' => false, 'message' => 'This action is unauthorized, PPCO']);
         
         $this->assertDatabaseMissing('objectives', ['project_id' => $project->id, 'title' => 'viewer objective']);
 
@@ -88,7 +88,44 @@ class ObjectiveControllerTest extends TestCase
             ->postJson(route('projects.objectives.store', $project), [
                 'title' => 'stranger objective',
                 'project_id' => $project->id
-            ])->assertJson(['success' => false, 'message' => 'This action is unauthorized, OPCO']);
+            ])->assertJson(['success' => false, 'message' => 'This action is unauthorized, PPCO']);
+
+        $this->assertDatabaseMissing('objectives', ['project_id' => $project->id, 'title' => 'stranger objective']);
+    }
+
+    public function test_only_valid_user_can_update_objective(): void {
+        [$owner, $team, $project, $objective] = $this->createObjective();
+        $manager = User::factory()->create();
+        $user = User::factory()->create();
+        $viewer = User::factory()->create();
+        $stranger = User::factory()->create();
+
+        $this->addUserToProject($project, $manager);
+        $this->addUserToProject($project, $user, 'User');
+        $this->addUserToProject($project, $viewer, 'Viewer');
+
+        $this->actingAs($owner)
+            ->putJson(route('projects.objectives.update', [$project, $objective]), ['title' => 'owner name'])
+            ->assertJson(['success' => true, 'message' => 'Objective updated successfully']);
+        
+        $this->assertDatabaseHas('objectives', ['id' => $objective->id, 'title' => 'owner name']);
+
+        $this->actingAs($manager)
+            ->putJson(route('projects.objectives.update', [$project, $objective]), ['title' => 'manager name'])
+            ->assertJson(['success' => true, 'message' => 'Objective updated successfully']);
+        
+        $this->assertDatabaseHas('objectives', ['id' => $objective->id, 'title' => 'manager name']);
+
+        $this->actingAs($user)
+            ->putJson(route('projects.objectives.update', [$project, $objective]), ['title' => 'user name'])
+            ->assertJson(['success' => true, 'message' => 'Objective updated successfully']);
+        
+        $this->assertDatabaseHas('objectives', ['id' => $objective->id, 'title' => 'user name']);
+
+        $this->actingAs($stranger)
+            ->putJson(route('projects.objectives.update', [$project, $objective]), [
+                'title' => 'stranger objective',
+            ])->assertJson(['success' => false, 'message' => 'This action is unauthorized, OPUO']);
 
         $this->assertDatabaseMissing('objectives', ['project_id' => $project->id, 'title' => 'stranger objective']);
     }

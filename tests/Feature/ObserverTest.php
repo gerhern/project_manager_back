@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\enums\ObjectiveStatus;
 use App\Enums\ProjectStatus;
-use App\enums\TaskStatus;
+use App\Enums\TaskStatus;
 use App\Models\Objective;
 use App\Models\Task;
 use App\Traits\SetTestingData;

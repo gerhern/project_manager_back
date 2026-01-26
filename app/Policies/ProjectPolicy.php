@@ -96,6 +96,6 @@ class ProjectPolicy
             })
             ->exists();
         
-        return $isValidUser ? Response::allow() : Response::deny('This action is unauthorized, OPCO');
+        return $isValidUser ? Response::allow() : Response::deny('This action is unauthorized, PPCO');
     }
 }
