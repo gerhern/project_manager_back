@@ -27,6 +27,13 @@ Route::delete('/projects/cancel/{project}', [ProjectController::class, 'cancel']
     ->name('projects.cancel');
 
 //Objectives
+Route::get('/projects/{project}/objectives', [ObjectiveController::class, 'index'])
+    ->name('projects.objectives.index');
+
+Route::post('/projects/{project}/objectives/store', [ObjectiveController::class, 'store'])
+    ->middleware(EnsureHierarchyIsPermitted::class)
+    ->name('projects.objectives.store');
+
 Route::match(['PUT', 'PATCH', 'DELETE'],'/objectives/{objective}', [ObjectiveController::class, 'update'])
     ->middleware(EnsureHierarchyIsPermitted::class)
     ->name('objective.update');

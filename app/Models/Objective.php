@@ -19,7 +19,10 @@ class Objective extends Model
     ];
 
     protected $fillable = [
-        'status'
+        'status',
+        'title',
+        'description',
+        'project_id'
     ];
 
     public function tasks(){
