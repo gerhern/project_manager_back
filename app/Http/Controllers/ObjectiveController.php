@@ -60,4 +60,10 @@ class ObjectiveController extends Controller
         $objective->load('tasks');
         return $this->sendApiResponse($objective,'Objective retrieved successfully');
     }
+
+    public function cancel(Request $request, Project $project, Objective $objective): JsonResponse{
+        Gate::authorize('cancelObjective', [$objective, $project]);
+        $objective->update(['status' => ObjectiveStatus::Canceled->name]);
+        return $this->sendApiResponse($objective, 'Objective has been canceled susccessfully');
+    }
 }

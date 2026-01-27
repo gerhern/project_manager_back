@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\enums\ObjectiveStatus;
 use App\Models\User;
 use App\Traits\SetTestingData;
 use Database\Seeders\RolesSeeder;
@@ -26,7 +27,7 @@ class ObjectiveControllerTest extends TestCase
         $userA = User::factory()->create();
         $this->addUserToProject($projectA, $userA);
 
-        [$userB, $teamB, $projectB, $objectiveB] = $this->createObjective([], $user, $team);
+        [,,, $objectiveB] = $this->createObjective([], $user, $team);
 
         $this->actingAs($userA)
             ->getJson(route('projects.objectives.index', $projectA)) // Enviamos el modelo o ID
@@ -37,7 +38,7 @@ class ObjectiveControllerTest extends TestCase
     }
 
     public function test_only_valid_user_can_create_new_objective(): void {
-        [$owner, $team, $project] = $this->createProject();
+        [$owner,, $project] = $this->createProject();
         $manager = User::factory()->create();
         $user = User::factory()->create();
         $viewer = User::factory()->create();
@@ -46,7 +47,6 @@ class ObjectiveControllerTest extends TestCase
         $this->addUserToProject($project, $manager);
         $this->addUserToProject($project, $user, 'User');
         $this->addUserToProject($project, $viewer, 'Viewer');
-        // $this->addUserToProject($project, $owner);
 
         $this->actingAs($owner)
             ->postJson(route('projects.objectives.store', $project), [
@@ -94,7 +94,7 @@ class ObjectiveControllerTest extends TestCase
     }
 
     public function test_only_valid_user_can_update_objective(): void {
-        [$owner, $team, $project, $objective] = $this->createObjective();
+        [$owner,, $project, $objective] = $this->createObjective();
         $manager = User::factory()->create();
         $user = User::factory()->create();
         $viewer = User::factory()->create();
@@ -131,7 +131,7 @@ class ObjectiveControllerTest extends TestCase
     }
 
     public function test_show_works(): void {
-        [$owner, $team, $project, $objective] = $this->createObjective();
+        [$owner,, $project, $objective] = $this->createObjective();
         $viewer = User::factory()->create();
         $stranger = User::factory()->create();
 
@@ -154,15 +154,29 @@ class ObjectiveControllerTest extends TestCase
     }
 
     public function test_cannot_access_objective_from_another_project(): void {
-        // Proyecto A del Usuario 1
-        [$user, $team, $projectA, $objectiveA] = $this->createObjective();
+        [$user,, $projectA,] = $this->createObjective();
         
-        // Proyecto B de otro Usuario (o del mismo, no importa)
-        [$user2, $team2, $projectB, $objectiveB] = $this->createObjective();
+        [,,,$objectiveB] = $this->createObjective();
 
-        // Intentamos ver el Objetivo B a través de la ruta del Proyecto A
         $this->actingAs($user)
             ->getJson(route('projects.objectives.show', [$projectA, $objectiveB]))
-            ->assertStatus(404); // DEBE dar 404 porque B no pertenece a A
+            ->assertStatus(404);
+    }
+
+    public function test_only_valid_user_can_inactive_objective(): void {
+        [$user,,$project, $objective] = $this->createObjective();
+        $stranger = User::factory()->create();
+
+        $this->actingAs($stranger)
+            ->deleteJson(route('projects.objectives.delete', [$project, $objective]))
+            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, OPCO']);
+
+        $this->actingAs($user)
+            ->deleteJson(route('projects.objectives.delete', [$project, $objective]))
+            ->assertJson(['success' => true, 'message' => 'Objective has been canceled susccessfully'])
+            ->assertOk();
+
+        $this->assertDatabaseHas('objectives', ['id' => $objective->id, 'status' => ObjectiveStatus::Canceled]);
+
     }
 }

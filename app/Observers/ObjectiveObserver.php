@@ -2,8 +2,8 @@
 
 namespace App\Observers;
 
-use App\enums\ObjectiveStatus;
-use App\enums\TaskStatus;
+use App\Enums\ObjectiveStatus;
+use App\Enums\TaskStatus;
 use App\Models\Objective;
 use App\Models\Task;
 

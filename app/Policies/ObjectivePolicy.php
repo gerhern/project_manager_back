@@ -19,4 +19,15 @@ class ObjectivePolicy
 
         return $isValidUser ? Response::allow() : Response::deny('This action is unauthorized, OPUO');
     }
+
+    public function cancelObjective(User $user, $objective, $project): Response{
+
+        if($user->id === $project->user_id){
+            return Response::allow();
+        }
+
+        $isValidUser = $user->hasProjectRole($project, ['Manager']);
+        return $isValidUser ? Response::allow() : Response::deny('This action is unauthorized, OPCO');
+    }
+    
 }

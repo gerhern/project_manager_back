@@ -14,12 +14,12 @@ Route::post('/projects/store', [ProjectController::class, 'store'])
     ->middleware(EnsureHierarchyIsPermitted::class)
     ->name('projects.store');
 
-Route::match(['PUT', 'PATCH', 'DELETE'], '/projects/{project}', [ProjectController::class, 'update'])
+Route::match(['PUT', 'PATCH'], '/projects/{project}', [ProjectController::class, 'update'])
     ->middleware(EnsureHierarchyIsPermitted::class)
     ->name('projects.update');
 
 Route::get('/projects/show/{project}', [ProjectController::class, 'show'])
-    ->middleware(EnsureHierarchyIsPermitted::class)
+    // ->middleware(EnsureHierarchyIsPermitted::class)
     ->name('project.show');
 
 Route::delete('/projects/cancel/{project}', [ProjectController::class, 'cancel'])
@@ -41,6 +41,11 @@ Route::match(['PUT', 'PATCH'],'projects/{project}/objectives/{objective}', [Obje
 
 Route::get('projects/{project}/objectives/{objective}', [ObjectiveController::class, 'show'])
     ->name('projects.objectives.show')
+    ->scopeBindings();
+
+Route::delete('projects/{project}/objectives/{objective}', [ObjectiveController::class, 'cancel'])
+    // ->middleware(EnsureHierarchyIsPermitted::class)
+    ->name('projects.objectives.delete')
     ->scopeBindings();
 
 //Tasks
