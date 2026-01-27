@@ -38,6 +38,9 @@ Route::match(['PUT', 'PATCH'],'projects/{project}/objectives/{objective}', [Obje
     ->middleware(EnsureHierarchyIsPermitted::class)
     ->name('projects.objectives.update');
 
+Route::get('projects/{project}/objectives/{objective}', [ObjectiveController::class, 'show'])
+    ->name('projects.objectives.show');
+
 //Tasks
 Route::match(['PUT', 'PATCH', 'DELETE'], '/tasks/{task}', [TaskController::class, 'update'])
     ->middleware(EnsureHierarchyIsPermitted::class)

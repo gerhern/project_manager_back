@@ -26,21 +26,29 @@ class ObjectiveController extends Controller
         return $this->sendApiResponse($objectives, 'Projects retrieved successfully');
     }
 
-    public function store(ObjectiveStoreRequest $request, Project $project){
+    public function store(ObjectiveStoreRequest $request, Project $project): JsonResponse{
         Gate::authorize('createObjective', $project);
 
-        $objective = Objective::create([
-            'title'         => $request->title,
-            'description'   => $request->description,
-            'status'        => ObjectiveStatus::NotCompleted->name,
-            'project_id'    => $project->id
-        ]);
+        try{
+            \DB::beginTransaction();
+            $objective = Objective::create([
+                'title'         => $request->title,
+                'description'   => $request->description,
+                'status'        => ObjectiveStatus::NotCompleted->name,
+                'project_id'    => $project->id
+            ]);
+    
+            \DB::commit();
+            return $this->sendApiResponse($objective, 'Objective created successfully', 201);
+        }catch(\Exception $e){
+            \DB::rollBack();
+            \Log::error('Error creating objective: ' . $e->getMessage());
+            return $this->sendApiError('Error updating objective');
+        }
 
-        return $this->sendApiResponse($objective, 'Objective created successfully', 201);
     }
 
-    public function update(ObjectiveUpdateRequest $request, Project $project, Objective $objective){
-
+    public function update(ObjectiveUpdateRequest $request, Project $project, Objective $objective):JsonResponse{
         Gate::authorize('updateObjective', [$objective, $project]);
 
         try{
@@ -53,7 +61,10 @@ class ObjectiveController extends Controller
             \DB::rollBack();
             return $this->sendApiError('Error updating objective');
         }
+    }
 
-
+    public function show(Request $request, Project $project, Objective $objective): JsonResponse{
+        Gate::authorize('viewProject', $project);
+        return $this->sendApiResponse($objective,'Objective retrieved successfully');
     }
 }

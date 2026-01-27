@@ -129,4 +129,27 @@ class ObjectiveControllerTest extends TestCase
 
         $this->assertDatabaseMissing('objectives', ['project_id' => $project->id, 'title' => 'stranger objective']);
     }
+
+    public function test_show_works(): void {
+        [$owner, $team, $project, $objective] = $this->createObjective();
+        $viewer = User::factory()->create();
+        $stranger = User::factory()->create();
+
+        $this->addUserToProject($project, $viewer, 'Viewer');
+
+        $this->actingAs($owner)
+            ->getJson(route('projects.objectives.show', [$project, $objective]))
+            ->assertJson(['success' => true, 'message' => 'Objective retrieved successfully'])
+            ->assertJsonFragment(['id' => $objective->id]);
+
+        
+        $this->actingAs($viewer)
+            ->getJson(route('projects.objectives.show', [$project, $objective]))
+            ->assertJsonFragment(['id' => $objective->id])
+            ->assertJson(['success' => true, 'message' => 'Objective retrieved successfully']);
+
+        $this->actingAs($stranger)
+            ->getJson(route('projects.objectives.show', [$project, $objective]))
+            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, PPVP']);
+    }
 }
