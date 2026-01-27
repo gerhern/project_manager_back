@@ -51,20 +51,13 @@ class ObjectiveController extends Controller
     public function update(ObjectiveUpdateRequest $request, Project $project, Objective $objective):JsonResponse{
         Gate::authorize('updateObjective', [$objective, $project]);
 
-        try{
-            \DB::beginTransaction();
             $objective->update($request->validated());
-            \DB::commit();
             return $this->sendApiResponse($objective, 'Objective updated successfully');
-        }catch(\Exception $e){
-            \Log::error('Error updating objective: ' . $e->getMessage());
-            \DB::rollBack();
-            return $this->sendApiError('Error updating objective');
-        }
     }
 
     public function show(Request $request, Project $project, Objective $objective): JsonResponse{
         Gate::authorize('viewProject', $project);
+        $objective->load('tasks');
         return $this->sendApiResponse($objective,'Objective retrieved successfully');
     }
 }

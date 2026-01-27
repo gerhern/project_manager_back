@@ -152,4 +152,17 @@ class ObjectiveControllerTest extends TestCase
             ->getJson(route('projects.objectives.show', [$project, $objective]))
             ->assertJson(['success' => false, 'message' => 'This action is unauthorized, PPVP']);
     }
+
+    public function test_cannot_access_objective_from_another_project(): void {
+        // Proyecto A del Usuario 1
+        [$user, $team, $projectA, $objectiveA] = $this->createObjective();
+        
+        // Proyecto B de otro Usuario (o del mismo, no importa)
+        [$user2, $team2, $projectB, $objectiveB] = $this->createObjective();
+
+        // Intentamos ver el Objetivo B a través de la ruta del Proyecto A
+        $this->actingAs($user)
+            ->getJson(route('projects.objectives.show', [$projectA, $objectiveB]))
+            ->assertStatus(404); // DEBE dar 404 porque B no pertenece a A
+    }
 }

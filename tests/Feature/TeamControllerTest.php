@@ -155,4 +155,16 @@ class TeamControllerTest extends TestCase
         $this->assertDatabaseHas('teams', ['id' => $team->id,'status' => TeamStatus::Inactive->name]);
     }
 
+    public function test_show_team_works(): void {
+        [$user, $team] = $this->createTeam();
+
+        $this->addUserToTeam($team, $user);
+        
+        $this->actingAs($user)
+            ->getJson(route('teams.show', $team))
+            ->assertOk()
+            ->assertJson(['success' => true, 'message' => 'Team retrieved successfully', 'data' => ['id' => $team->id]]);
+
+    }
+
 }

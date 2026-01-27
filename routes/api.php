@@ -36,10 +36,12 @@ Route::post('/projects/{project}/objectives/store', [ObjectiveController::class,
 
 Route::match(['PUT', 'PATCH'],'projects/{project}/objectives/{objective}', [ObjectiveController::class, 'update'])
     ->middleware(EnsureHierarchyIsPermitted::class)
-    ->name('projects.objectives.update');
+    ->name('projects.objectives.update')
+    ->scopeBindings();
 
 Route::get('projects/{project}/objectives/{objective}', [ObjectiveController::class, 'show'])
-    ->name('projects.objectives.show');
+    ->name('projects.objectives.show')
+    ->scopeBindings();
 
 //Tasks
 Route::match(['PUT', 'PATCH', 'DELETE'], '/tasks/{task}', [TaskController::class, 'update'])
@@ -59,11 +61,14 @@ Route::match(['PUT', 'PATCH'], '/projects/dispute/{dispute}', [ProjectController
     ->name('dispute.resolve');
 
 //Teams
-Route::get('/teams/index', [TeamController::class, 'index'])
+Route::get('/teams', [TeamController::class, 'index'])
     ->name('teams.index');
 
 Route::post('/teams/create', [TeamController::class, 'store'])
     ->name('teams.store');
+
+Route::get('/teams/{team}', [TeamController::class, 'show'])
+    ->name('teams.show');
 
 Route::match(['PUT', 'PATCH'], '/teams/update/{team}', [TeamController::class, 'update'])
     ->middleware(EnsureHierarchyIsPermitted::class)

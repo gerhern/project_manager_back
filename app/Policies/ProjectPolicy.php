@@ -49,13 +49,8 @@ class ProjectPolicy
      * @return Response
      */
     public function updateProject(User $user, Project $project): Response {
-        $hasRole = Membership::where('user_id', $user->id)
-            ->where('model_id', $project->id)
-            ->where('model_type', Project::class)
-            ->whereHas('role', function($q) {
-                $q->where('name', 'Manager');
-            })
-            ->exists();
+
+        $hasRole = $user->hasProjectRole($project, 'Manager');
         
         return $hasRole ? Response::allow() : Response::deny("This action is unauthorized, PPUP", 403); 
     }
@@ -71,13 +66,7 @@ class ProjectPolicy
             return Response::allow();
         }
 
-        $hasRole = Membership::where('user_id', $user->id)
-            ->where('model_id', $project->id)
-            ->where('model_type', Project::class)
-            ->whereHas('role', function($q) {
-                $q->where('name', 'Manager');
-            })
-            ->exists();
+        $hasRole = $user->hasProjectRole($project, 'Manager');
         
             return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, PPCP', 403);
     }
@@ -88,13 +77,7 @@ class ProjectPolicy
             return Response::allow();
         }
 
-        $isValidUser = Membership::where('user_id', $user->id)
-            ->where('model_id', $project->id)
-            ->where('model_type', Project::class)
-            ->whereHas('role', function($q){
-                $q->whereIn('name', ['Manager', 'User']);
-            })
-            ->exists();
+        $isValidUser = $user->hasProjectRole($project, ['Manager', 'User']);
         
         return $isValidUser ? Response::allow() : Response::deny('This action is unauthorized, PPCO');
     }

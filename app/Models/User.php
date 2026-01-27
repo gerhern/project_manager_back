@@ -62,5 +62,21 @@ class User extends Authenticatable
     public function createdProjects(){
         return $this->hasMany(Project::class, 'user_id');
     }
+
+    public function hasProjectRole(Project $project, $roles): bool
+    {
+        $roles = is_array($roles) ? $roles : [$roles];
+        return \DB::table('memberships')
+            ->where('user_id', $this->id)
+            ->where('model_id', $project->id)
+            ->where('model_type', Project::class)
+            ->whereExists(function ($query) use ($roles) {
+                $query->select(\DB::raw(1))
+                    ->from('roles')
+                    ->whereColumn('roles.id', 'memberships.role_id')
+                    ->whereIn('roles.name', $roles);
+            })
+            ->exists();
+    }
             
 }

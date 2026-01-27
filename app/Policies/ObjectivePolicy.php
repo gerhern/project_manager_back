@@ -13,14 +13,9 @@ class ObjectivePolicy
         if($user->id === $project->user_id || $user->id === $objective->user_id){
             return Response::allow();
         }
+
+        $isValidUser = $user->hasProjectRole($project, ['Manager', 'User']);
         
-        $isValidUser = Membership::where('user_id', $user->id)
-            ->where('model_id', $project->id)
-            ->where('model_type', Project::class)
-            ->whereHas('role', function($q){
-                $q->whereIn('name', ['Manager', 'User']);
-            })
-            ->exists();
 
         return $isValidUser ? Response::allow() : Response::deny('This action is unauthorized, OPUO');
     }

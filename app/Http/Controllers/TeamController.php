@@ -15,7 +15,7 @@ use Spatie\Permission\Models\Role;
 class TeamController extends Controller
 {
     use ApiResponse;
-    public function index(Request $request){
+    public function index(Request $request): JsonResponse{
         $teams = $request->user()->teams()->withPivot('role_id')->get();
         return $this->sendApiResponse($teams, "Data Retrieved Successfuly", 200);
     }
@@ -43,6 +43,10 @@ class TeamController extends Controller
             \Log::error('Error creating team: '. $e->getMessage());
             return $this->sendApiError( 'Could not create team', 500);
         }
+    }
+
+    public function show(Request $request, Team $team): JsonResponse{
+        return $this->sendApiResponse($team, 'Team retrieved successfully');
     }
 
     public function update(TeamUpdateRequest $request, Team $team): JsonResponse{
