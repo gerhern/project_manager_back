@@ -44,11 +44,15 @@ Route::get('projects/{project}/objectives/{objective}', [ObjectiveController::cl
     ->scopeBindings();
 
 Route::delete('projects/{project}/objectives/{objective}', [ObjectiveController::class, 'cancel'])
-    // ->middleware(EnsureHierarchyIsPermitted::class)
+    ->middleware(EnsureHierarchyIsPermitted::class)
     ->name('projects.objectives.delete')
     ->scopeBindings();
 
 //Tasks
+Route::get('projects/{project}/objectives/{objective}/tasks', [TaskController::class, 'index'])
+    ->name('projects.objectives.tasks.index')
+    ->scopeBindings();
+    
 Route::match(['PUT', 'PATCH', 'DELETE'], '/tasks/{task}', [TaskController::class, 'update'])
     ->middleware(EnsureHierarchyIsPermitted::class)
     ->name('task.update');

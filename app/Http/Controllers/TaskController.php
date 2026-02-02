@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Objective;
+use App\Models\Project;
 use App\Traits\ApiResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
@@ -11,6 +14,12 @@ use App\Models\Task;
 class TaskController extends Controller
 {
     use ApiResponse;
+
+    public function index(Request $request, Project $project, Objective $objective): JsonResponse {
+        Gate::authorize('viewTasks', [Task::class, $project, $objective]);
+        $tasks = $objective->tasks;
+        return $this->sendApiResponse($tasks, 'Tasks retrieved successfully');
+    }
     public function update(Request $request, Task $task){
         
         Gate::authorize('updateTask', $task);

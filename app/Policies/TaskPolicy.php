@@ -10,6 +10,15 @@ use App\Models\Task;
 
 class TaskPolicy
 {
+    public function viewTasks($user, $project, $objective): Response{
+        if($objective->project_id !== $project->id){
+            return Response::deny('This action is unauthorized, TKPITK');
+        }
+
+        $hasRole = $user->hasProjectRole($project, ['Manager', 'User', 'Viewer']);
+        return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, TKPITK');
+    }
+
     public function cancelTask(User $user): Response{
         return $user->hasPermissionTo('cancel_task')
                 ? Response::allow()
