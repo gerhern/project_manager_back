@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\Objective;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
@@ -15,8 +16,25 @@ class TaskPolicy
             return Response::deny('This action is unauthorized, TKPITK');
         }
 
+        if($user->id === $project->user_id){
+            return Response::allow();
+        }
+
         $hasRole = $user->hasProjectRole($project, ['Manager', 'User', 'Viewer']);
         return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, TKPITK');
+    }
+
+    public function createTask($user, $project, $objective): Response {
+        if($objective->project_id !== $project->id){
+            return Response::deny('This action is unauthorized, TKPITK');
+        }
+
+        if($user->id === $project->user_id){
+            return Response::allow();
+        }
+
+        $hasRole = $user->hasProjectRole($project, ['Manager', 'User']);
+        return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, TKPSTK');
     }
 
     public function cancelTask(User $user): Response{

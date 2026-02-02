@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\enums\TaskStatus;
+use App\Http\Requests\TaskStoreRequest;
 use App\Models\Objective;
 use App\Models\Project;
 use App\Traits\ApiResponse;
@@ -25,6 +27,19 @@ class TaskController extends Controller
         Gate::authorize('updateTask', $task);
 
         return $this->sendApiResponse($task, 'Task updated successfully');
+    }
+
+    public function store(TaskStoreRequest $request, Project $project, Objective $objective): JsonResponse {
+        Gate::authorize('createTask', [Task::class, $project, $objective]);
+
+        
+        $task = Task::create(
+            $request->validated() + [
+                'objective_id'  => $objective->id,
+                'status'        => $request->filled('user_id') ? TaskStatus::Assigned->name : TaskStatus::Pending
+            ]);
+
+        return $this->sendApiResponse($task, 'Task created successfully', 201);
     }
 
 

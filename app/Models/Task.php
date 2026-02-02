@@ -16,6 +16,13 @@ class Task extends Model
         'status' => TaskStatus::class,
     ];
 
+    protected $fillable = [
+        'title',
+        'description',
+        'due_date',
+        'objective_id'
+    ];
+
     public function objective(){
         return $this->belongsTo(Objective::class);
     }

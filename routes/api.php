@@ -52,7 +52,12 @@ Route::delete('projects/{project}/objectives/{objective}', [ObjectiveController:
 Route::get('projects/{project}/objectives/{objective}/tasks', [TaskController::class, 'index'])
     ->name('projects.objectives.tasks.index')
     ->scopeBindings();
-    
+
+Route::post('projects/{project}/objectives/{objective}/store', [TaskController::class, 'store'])
+    ->name('projects.objectives.tasks.store')
+    ->middleware(EnsureHierarchyIsPermitted::class)
+    ->scopeBindings();
+
 Route::match(['PUT', 'PATCH', 'DELETE'], '/tasks/{task}', [TaskController::class, 'update'])
     ->middleware(EnsureHierarchyIsPermitted::class)
     ->name('task.update');
