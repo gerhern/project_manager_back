@@ -36,6 +36,7 @@ class TaskUpdaterequest extends FormRequest
             ],
             'description'   => 'nullable|string|min:3|max:1000',
             'due_date'      => 'required|date|after_or_equal:today',
+            'status'        => 'prohibited',
             'user_id'       => [
                 'nullable',
                 Rule::exists('memberships', 'user_id')

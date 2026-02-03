@@ -20,7 +20,8 @@ class Task extends Model
         'title',
         'description',
         'due_date',
-        'objective_id'
+        'objective_id',
+        'status'
     ];
 
     public function objective(){

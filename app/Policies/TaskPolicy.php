@@ -51,12 +51,6 @@ class TaskPolicy
         return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, TKPSTK');
     }
 
-    public function cancelTask(User $user): Response{
-        return $user->hasPermissionTo('cancel_task')
-                ? Response::allow()
-                : Response::deny("Solo un gerente puede cancelar tareas.");
-    }
-
     public function updateTask(User $user, Project $project, Objective $objective, Task $task): Response {
         if($user->id === $project->user_id){
             return Response::allow();
@@ -68,6 +62,19 @@ class TaskPolicy
 
         $hasRole = $user->hasProjectRole($project, ['Manager', 'User']);
         return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, TKPUTK');
+    }
+
+    public function cancelTask(User $user, Project $project, Objective $objective, Task $task): Response {
+        if($user->id === $project->user_id){
+            return Response::allow();
+        }
+
+        if($objective->id !== $task->objective_id || $project->id !== $objective->project_id){
+            return Response::deny('This action is unauthorized, TKPDTK');
+        }
+
+        $hasRole = $user->hasProjectRole($project, ['Manager', 'User']);
+        return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, TKPDTK');
     }
 
     public function updateStatus(User $user, Task $task, string $status): Response{

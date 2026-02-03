@@ -51,14 +51,11 @@ class TaskController extends Controller
     }
 
 
-    public function cancelTask(Request $request, Task $task){
+    public function cancelTask(Request $request,Project $project, Objective $objective, Task $task): JsonResponse{
 
-        Gate::authorize('cancelTask', $task);
-
-        return response()->json([
-            'message' => 'Task updated successfully',
-            'task' => $task,
-        ], 418);
+        Gate::authorize('cancelTask', [Task::class, $project, $objective, $task]);
+        $task->update(['status' => TaskStatus::Canceled->name]);
+        return $this->sendApiResponse($task, 'Task canceled successfully');
     }
 
     public function updateStatus(Request $request, Task $task){

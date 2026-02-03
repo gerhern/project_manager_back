@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\enums\TaskStatus;
 use App\Models\User;
 use App\Traits\SetTestingData;
 use Carbon\Carbon;
@@ -174,5 +175,54 @@ class TaskControllerTest extends TestCase
             ->assertJson(['success' => true, 'message' => 'Task updated successfully']);
 
         $this->assertDatabaseHas('tasks', ['title' => 'owner title']);
+    }
+
+    public function test_task_can_be_canceled(): void {
+        $this->seed(RolesSeeder::class);
+        [$owner,, $project, $objective, $task] = $this->createTask();
+        $viewer = User::factory()->create();
+        $stranger = User::factory()->create();
+        $user = User::factory()->create();
+
+        $this->addUserToProject($project, $viewer, 'Viewer');
+        $this->addUserToProject($project, $user, 'User');
+
+        $this->actingAs($stranger)
+            ->deleteJson(
+                route('projects.objectives.tasks.delete', [$project, $objective, $task]),
+                ['status' => TaskStatus::Canceled->name]
+            )->assertForbidden()
+            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, TKPDTK']);
+
+        $this->assertDatabaseMissing('tasks', ['status' => TaskStatus::Canceled]);
+
+        $this->actingAs($viewer)
+            ->deleteJson(
+                route('projects.objectives.tasks.delete', [$project, $objective, $task]),
+                ['status' => TaskStatus::Canceled->name]
+            )->assertForbidden()
+            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, TKPDTK']);
+
+        $this->assertDatabaseMissing('tasks', ['status' => TaskStatus::Canceled]);
+
+        $this->actingAs($user)
+            ->deleteJson(
+                route('projects.objectives.tasks.delete', [$project, $objective, $task]),
+                ['status' => TaskStatus::Canceled->name]
+            )->assertOk()
+            ->assertJson(['success' => true, 'message' => 'Task canceled successfully']);
+
+        $this->assertDatabaseHas('tasks', ['id' => $task->id, 'status' => TaskStatus::Canceled]);
+
+        $task->update(['status' => TaskStatus::Assigned]);
+
+        $this->actingAs($owner)
+            ->deleteJson(
+                route('projects.objectives.tasks.delete', [$project, $objective, $task]),
+                ['status' => TaskStatus::Canceled->name]
+            )->assertOk()
+            ->assertJson(['success' => true, 'message' => 'Task canceled successfully']);
+
+        $this->assertDatabaseHas('tasks', ['id' => $task->id, 'status' => TaskStatus::Canceled]);
     }
 }
