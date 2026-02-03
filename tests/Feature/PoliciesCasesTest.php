@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Traits\SetTestingData;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
@@ -73,7 +74,9 @@ class PoliciesCasesTest extends TestCase
 
         $this->actingAs($viewer);
 
-            $this->putJson(route('task.update', $task), ['status' => 'Completed'])
+            $this->putJson(
+                route('projects.objectives.tasks.update', [$project, $objective, $task]),
+                 ['title' => 'new title', 'due_date'  => Carbon::today()->addDays(2)->toDateString()])
             ->assertStatus(403)
             ->assertJsonStructure(['success', 'message']);
 
@@ -86,7 +89,9 @@ class PoliciesCasesTest extends TestCase
             ->assertJsonStructure(['success', 'message']);
 
         $this->actingAs($employee)
-            ->putJson(route('task.update', $task), ['description' => 'Testing'])
+            ->putJson(
+                route('projects.objectives.tasks.update', [$project, $objective, $task]),
+                ['title' => 'Testing', 'due_date'  => Carbon::today()->addDays(2)->toDateString()])
             ->assertStatus(200)
             ->assertJsonStructure(['success', 'message']);
 

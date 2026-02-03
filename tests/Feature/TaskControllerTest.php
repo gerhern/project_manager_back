@@ -126,4 +126,53 @@ class TaskControllerTest extends TestCase
             ->assertForbidden()
             ->assertJson(['success' => false, 'message' => 'This action is unauthorized, TKPSTK']);
     }
+
+    public function test_valid_user_can_update_task(): void {
+        $this->seed(RolesSeeder::class);
+        [$owner, $team, $project, $objective, $task] = $this->createTask();
+        $stranger = User::factory()->create();
+        $viewer = User::factory()->create();
+        $user = User::factory()->create();
+
+        $this->addUserToProject($project, $viewer, 'Viewer');
+        $this->addUserToProject($project, $user, 'User');
+
+        $this->actingAs($stranger)
+            ->putJson(
+                route('projects.objectives.tasks.update', [$project, $objective, $task]),
+                ['title' => 'stranger title', 'due_date'  => Carbon::today()->addDays(2)->toDateString()]
+            )->assertForbidden()
+            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, TKPUTK']);
+
+        $this->assertDatabaseMissing('tasks', ['title' => 'stranger title']);
+
+        $this->actingAs($viewer)
+            ->putJson(
+                route('projects.objectives.tasks.update', [$project, $objective, $task]),
+                ['title' => 'viewer title', 'due_date'  => Carbon::today()->addDays(2)->toDateString()]
+            )->assertForbidden()
+            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, TKPUTK']);
+        
+        $this->assertDatabaseMissing('tasks', ['title' => 'viewer title']);
+
+        $this->actingAs($user)
+            ->putJson(
+                route('projects.objectives.tasks.update', [$project, $objective, $task]),
+                ['title' => 'user title', 'due_date'  => Carbon::today()->addDays(2)->toDateString()]        
+            )
+            ->assertOk()
+            ->assertJson(['success' => true, 'message' => 'Task updated successfully']);
+
+        $this->assertDatabaseHas('tasks', ['title' => 'user title']);
+
+        $this->actingAs($owner)
+            ->putJson(
+                route('projects.objectives.tasks.update', [$project, $objective, $task]),
+                ['title' => 'owner title', 'due_date'  => Carbon::today()->addDays(2)->toDateString()]        
+            )
+            ->assertOk()
+            ->assertJson(['success' => true, 'message' => 'Task updated successfully']);
+
+        $this->assertDatabaseHas('tasks', ['title' => 'owner title']);
+    }
 }

@@ -62,9 +62,10 @@ Route::get('projects/{project}/objectives/{objective}/tasks/{task}', [TaskContro
     ->name('projects.objectives.tasks.show')
     ->scopeBindings();
 
-Route::match(['PUT', 'PATCH', 'DELETE'], '/tasks/{task}', [TaskController::class, 'update'])
+Route::match(['PUT', 'PATCH'], 'projects/{project}/objectives/{objective}/tasks/{task}', [TaskController::class, 'update'])
     ->middleware(EnsureHierarchyIsPermitted::class)
-    ->name('task.update');
+    ->name('projects.objectives.tasks.update')
+    ->scopeBindings();
 
 Route::match(['PUT', 'PATCH', 'DELETE'], '/tasks/cancel/{task}', [TaskController::class, 'cancelTask'])
     ->middleware(EnsureHierarchyIsPermitted::class)

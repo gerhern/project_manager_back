@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\enums\TaskStatus;
 use App\Http\Requests\TaskStoreRequest;
+use App\Http\Requests\TaskUpdaterequest;
 use App\Models\Objective;
 use App\Models\Project;
 use App\Traits\ApiResponse;
@@ -22,12 +23,6 @@ class TaskController extends Controller
         $tasks = $objective->tasks;
         return $this->sendApiResponse($tasks, 'Tasks retrieved successfully');
     }
-    public function update(Request $request, Task $task){
-        
-        Gate::authorize('updateTask', $task);
-
-        return $this->sendApiResponse($task, 'Task updated successfully');
-    }
 
     public function store(TaskStoreRequest $request, Project $project, Objective $objective): JsonResponse {
         Gate::authorize('createTask', [Task::class, $project, $objective]);
@@ -45,6 +40,14 @@ class TaskController extends Controller
     public function show(Request $request, Project $project, Objective $objective, Task $task): JsonResponse {
         Gate::authorize('viewTask', [Task::class, $project, $objective, $task]);
         return $this->sendApiResponse($task, 'Task retrieved successfully');
+    }
+
+    public function update(TaskUpdaterequest $request, Project $project, Objective $objective, Task $task): JsonResponse {
+        Gate::authorize('updateTask', [Task::class, $project, $objective, $task]);
+
+        $task->update($request->validated());
+
+        return $this->sendApiResponse($task, 'Task updated successfully');
     }
 
 
