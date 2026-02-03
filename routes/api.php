@@ -58,6 +58,10 @@ Route::post('projects/{project}/objectives/{objective}/store', [TaskController::
     ->middleware(EnsureHierarchyIsPermitted::class)
     ->scopeBindings();
 
+Route::get('projects/{project}/objectives/{objective}/tasks/{task}', [TaskController::class, 'show'])
+    ->name('projects.objectives.tasks.show')
+    ->scopeBindings();
+
 Route::match(['PUT', 'PATCH', 'DELETE'], '/tasks/{task}', [TaskController::class, 'update'])
     ->middleware(EnsureHierarchyIsPermitted::class)
     ->name('task.update');

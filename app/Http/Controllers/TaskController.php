@@ -42,6 +42,11 @@ class TaskController extends Controller
         return $this->sendApiResponse($task, 'Task created successfully', 201);
     }
 
+    public function show(Request $request, Project $project, Objective $objective, Task $task): JsonResponse {
+        Gate::authorize('viewTask', [Task::class, $project, $objective, $task]);
+        return $this->sendApiResponse($task, 'Task retrieved successfully');
+    }
+
 
     public function cancelTask(Request $request, Task $task){
 

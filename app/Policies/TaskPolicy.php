@@ -26,7 +26,7 @@ class TaskPolicy
 
     public function createTask($user, $project, $objective): Response {
         if($objective->project_id !== $project->id){
-            return Response::deny('This action is unauthorized, TKPITK');
+            return Response::deny('This action is unauthorized, TKPCTK');
         }
 
         if($user->id === $project->user_id){
@@ -34,6 +34,19 @@ class TaskPolicy
         }
 
         $hasRole = $user->hasProjectRole($project, ['Manager', 'User']);
+        return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, TKPCTK');
+    }
+
+    public function viewTask($user, $project, $objective, $task): Response{
+        if($objective->project_id !== $project->id || $task->objective_id !== $objective->id){
+            return Response::deny('This action is unauthorized, TKPSTK');
+        }
+
+        if($user->id === $project->user_id){
+            return Response::allow();
+        }
+
+        $hasRole = $user->hasProjectRole($project, ['Manager', 'User', 'Viewer']);
         return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, TKPSTK');
     }
 

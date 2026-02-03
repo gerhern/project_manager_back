@@ -67,7 +67,7 @@ class TaskControllerTest extends TestCase
                     ]
             )
             ->assertForbidden()
-            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, TKPSTK']);
+            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, TKPCTK']);
 
         $this->assertDatabaseMissing('tasks', ['title' => 'stranger name']);
 
@@ -96,5 +96,34 @@ class TaskControllerTest extends TestCase
             ->assertJson(['success' => true, 'message' => 'Task created successfully']);
 
         $this->assertDatabaseHas('tasks', ['title' => 'owner name', 'objective_id' => $objective->id,]);
+    }
+
+    public function test_show_task_works(): void {
+        $this->seed(RolesSeeder::class);
+        [$owner, $team, $project, $objective, $task] = $this->createTask();
+        $user = User::factory()->create();
+        $stranger = User::factory()->create();
+        [,,,,$taskB] = $this->createTask([], $owner, $team, $project, $objective);
+        $this->addUserToProject($project, $owner);
+        $this->addUserToProject($project, $user, 'Viewer');
+
+        $this->actingAs($owner)
+            ->getJson(route('projects.objectives.tasks.show', [$project, $objective, $task]))
+            ->assertOk()
+            ->assertJson(['success' => true, 'message' => 'Task retrieved successfully'])
+            ->assertJsonFragment(['id' => $task->id])
+            ->assertJsonMissing(['id' => $taskB->id]);
+
+        $this->actingAs($user)
+            ->getJson(route('projects.objectives.tasks.show', [$project, $objective, $task]))
+            ->assertOk()
+            ->assertJson(['success' => true, 'message' => 'Task retrieved successfully'])
+            ->assertJsonFragment(['id' => $task->id])
+            ->assertJsonMissing(['id' => $taskB->id]);
+
+        $this->actingAs($stranger)
+            ->getJson(route('projects.objectives.tasks.show', [$project, $objective, $task]))
+            ->assertForbidden()
+            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, TKPSTK']);
     }
 }
