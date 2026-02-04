@@ -17,7 +17,7 @@ class TeamController extends Controller
     use ApiResponse;
     public function index(Request $request): JsonResponse{
         $teams = $request->user()->teams()->withPivot('role_id')->get();
-        return $this->sendApiResponse($teams, "Data Retrieved Successfuly", 200);
+        return $this->sendApiResponse($teams, "Data retrieved successfuly", 200);
     }
 
     public function store(TeamStoreRequest $request): JsonResponse{
@@ -50,19 +50,15 @@ class TeamController extends Controller
     }
 
     public function update(TeamUpdateRequest $request, Team $team): JsonResponse{
-        Gate::authorize('updateTeam', $team);
-        try{
-            $team->update($request->validated());
-            return $this->sendApiResponse($team, 'Team updated successfully.', 200);
+        Gate::authorize('updateTeam', [Team::class, $team]);
+        
+        $team->update($request->validated());
 
-        }catch(\Exception $e){
-            \Log::error('Error, can not updated team: '.$e->getMessage());
-            return $this->sendApiError('Error, can not updated team', 403);
-        }
+        return $this->sendApiResponse($team, 'Team updated successfully.', 200);
     }
 
     public function inactiveTeam(Request $request, Team $team): JsonResponse {
-        Gate::authorize('inactiveTeam', $team);
+        Gate::authorize('inactiveTeam', [Team::class, $team]);
 
         $team->update(['status' => TeamStatus::Inactive->name]);
 

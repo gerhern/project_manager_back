@@ -90,7 +90,7 @@ Route::post('/teams/create', [TeamController::class, 'store'])
 Route::get('/teams/{team}', [TeamController::class, 'show'])
     ->name('teams.show');
 
-Route::match(['PUT', 'PATCH'], '/teams/update/{team}', [TeamController::class, 'update'])
+Route::match(['PUT', 'PATCH'], '/teams/{team}/update', [TeamController::class, 'update'])
     ->middleware(EnsureHierarchyIsPermitted::class)
     ->name('teams.update');
 

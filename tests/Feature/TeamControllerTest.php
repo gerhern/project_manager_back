@@ -25,28 +25,23 @@ class TeamControllerTest extends TestCase
     {
         $teamAdmin = Team::factory()->create();
         $teamMember = Team::factory()->create();
-        Team::factory(2)->create();
+        Team::factory()->create();
         $user = User::factory()->create();
 
         $this->addUserToTeam($teamAdmin, $user, 'Admin');
         $this->addUserToTeam($teamMember, $user, 'Member');
 
         $response = $this->actingAs($user)
-            ->getJson(route('teams.index'));
-
-        $response = $this->actingAs($user)
-        ->getJson(route('teams.index'));
-
-        $response->assertStatus(200)
+            ->getJson(route('teams.index'))
+            ->assertOk()
             ->assertJsonCount(2, 'data')
             ->assertJson([
                 'success' => true,
-                'message' => 'Data Retrieved Successfuly'
-            ]);
-        $teamIds = collect($response->json('data'))->pluck('id')->toArray();
-        $this->assertContains($teamAdmin->id, $teamIds);
-        $this->assertContains($teamMember->id, $teamIds);
+                'message' => 'Data retrieved successfuly'
+            ])->assertJsonFragment(['id' => $teamAdmin->id])
+            ->assertJsonFragment(['id' => $teamMember->id]);
 
+        $teamIds = collect($response->json('data'))->pluck('id')->toArray();
         $this->assertCount(2, $teamIds);
     }
 
@@ -54,10 +49,9 @@ class TeamControllerTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)
-            ->postJson(route('teams.store'), ['name' => 'my new Team']);
-
-        $response->assertStatus(201)
+        $this->actingAs($user)
+            ->postJson(route('teams.store'), ['name' => 'my new Team'])
+            ->assertStatus(201)
             ->assertJson(['success' => true, 'message' => 'Team created successfully']);
 
         $this->assertDatabaseHas('teams', ['name' => 'my new Team']);
@@ -76,12 +70,11 @@ class TeamControllerTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)
+        $this->actingAs($user)
             ->postJson(route('teams.store'), [
                 'name' => 'ab',
-            ]);
-
-        $response->assertStatus(422)
+            ])
+            ->assertStatus(422)
             ->assertJson([
                 'success' => false,
                 'message' => 'Data validation errors',
@@ -104,31 +97,27 @@ class TeamControllerTest extends TestCase
 
     public function test_valid_user_can_update_team_data(): void
     {
-        $adminUser = User::factory()->create()->assignRole('Admin');
-        $team = Team::factory()->create(['name' => 'first name']);
+        [$adminUser, $team] = $this->createTeam(['name' => 'first name']);
 
         $this->addUserToTeam($team, $adminUser, 'Admin');
 
         $this->actingAs($adminUser)
             ->putJson(route('teams.update', $team), ['name' => 'new name'])
-            ->assertJsonStructure(['success', 'data', 'message'])
             ->assertJson(['success' => true, 'message' => 'Team updated successfully.'])
-            ->assertStatus(200);
+            ->assertOk();
 
         $this->assertDatabaseHas('teams', ['name' => 'new name']);
     }
 
     public function test_invalid_user_can_not_update_team():void {
-        $otherUser = User::factory()->create();
-        $team = Team::factory()->create(['name' => 'first name']);
+        [$otherUser, $team] = $this->createTeam(['name' => 'first name']);
 
         $this->addUserToTeam($team, $otherUser, 'Member');
 
         $this->actingAs($otherUser)
             ->putJson(route('teams.update', $team), ['name' => 'third name'])
-            ->assertJsonStructure(['success', 'message'])
-            ->assertJson(['success' => false])
-            ->assertStatus(403);
+            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, TPUT'])
+            ->assertForbidden();
 
         $this->assertDatabaseMissing('teams', ['name' => 'third name']);
     }
@@ -140,17 +129,15 @@ class TeamControllerTest extends TestCase
 
         $this->actingAs($stranger)
             ->deleteJson(route('teams.inactive', $team))
-            ->assertStatus(403)
-            ->assertJsonStructure(['success', 'message'])
-            ->assertJson(['success' => false]);
+            ->assertForbidden()
+            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, TPIT']);
 
         $this->assertDatabaseHas('teams', ['id' => $team->id,'status' => TeamStatus::Active->name]);
 
         $this->actingAs($owner)
             ->deleteJson(route('teams.inactive', $team))
-            ->assertStatus(200)
-            ->assertJsonStructure(['success', 'data', 'message'])
-            ->assertJson(['success' => true]);
+            ->assertOk()
+            ->assertJson(['success' => true, 'message' => 'Team inactivated successfully']);
 
         $this->assertDatabaseHas('teams', ['id' => $team->id,'status' => TeamStatus::Inactive->name]);
     }

@@ -15,12 +15,7 @@ class   TeamUpdateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        $teamId = $this->route('team')->id;
-
-        return $this->user()->teams()
-            ->where('model_id', $teamId)
-            ->wherePivot('role_id', Role::where('name', 'Admin')->value('id'))
-            ->exists();
+        return true;
     }
 
     /**
