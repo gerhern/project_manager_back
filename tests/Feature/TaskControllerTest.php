@@ -225,4 +225,58 @@ class TaskControllerTest extends TestCase
 
         $this->assertDatabaseHas('tasks', ['id' => $task->id, 'status' => TaskStatus::Canceled]);
     }
+
+    public function test_task_status_can_be_updated(): void {
+        $this->seed(RolesSeeder::class);
+        [$owner,, $project, $objective, $task] = $this->createTask();
+
+        $stranger = User::factory()->create();
+        $viewer = User::factory()->create();
+        $user = User::factory()->create();
+
+        $this->addUserToProject($project, $viewer, 'Viewer');
+        $this->addUserToProject($project, $user, 'User');
+
+        $this->actingAs($stranger)
+            ->putJson(
+                route('projects.objectives.tasks.status', [$project, $objective, $task]),
+                ['status' => TaskStatus::Assigned->name])
+            ->assertForbidden()
+            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, TKPUSTK']);
+
+        $this->assertDatabaseMissing('tasks', ['status' => TaskStatus::Assigned->name]);
+
+        $this->actingAs($viewer)
+            ->putJson(
+                route('projects.objectives.tasks.status', [$project, $objective, $task]),
+                ['status' => TaskStatus::Assigned->name])
+            ->assertForbidden()
+            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, TKPUSTK']);
+
+        $this->assertDatabaseMissing('tasks', ['status' => TaskStatus::Assigned->name]);
+
+        $this->actingAs($user)
+            ->putJson(
+                route('projects.objectives.tasks.status',[$project, $objective, $task]),
+                ['status' => TaskStatus::Assigned->name])
+            ->assertOk()
+            ->assertJson(['success' => true, 'message' => 'Task status updated successfully']);
+        $this->assertDatabaseHas('tasks', ['status' => TaskStatus::Assigned]);
+
+        $this->actingAs($owner)
+            ->putJson(
+                route('projects.objectives.tasks.status',[$project, $objective, $task]),
+                ['status' => TaskStatus::InProgress->name])
+            ->assertOk()
+            ->assertJson(['success' => true, 'message' => 'Task status updated successfully']);
+        $this->assertDatabaseHas('tasks', ['status' => TaskStatus::InProgress->name]);
+
+         $this->actingAs($user)
+            ->putJson(
+                route('projects.objectives.tasks.status',[$project, $objective, $task]),
+                ['status' => TaskStatus::Canceled->name])
+            ->assertForbidden()
+            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, TKPUSTK']);
+        $this->assertDatabaseMissing('tasks', ['status' => TaskStatus::Canceled->name]);
+    }
 }

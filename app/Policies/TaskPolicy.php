@@ -52,12 +52,12 @@ class TaskPolicy
     }
 
     public function updateTask(User $user, Project $project, Objective $objective, Task $task): Response {
-        if($user->id === $project->user_id){
-            return Response::allow();
-        }
-
         if($objective->id !== $task->objective_id || $project->id !== $objective->project_id){
             return Response::deny('This action is unauthorized, TKPUTK');
+        }
+
+        if($user->id === $project->user_id){
+            return Response::allow();
         }
 
         $hasRole = $user->hasProjectRole($project, ['Manager', 'User']);
@@ -65,29 +65,33 @@ class TaskPolicy
     }
 
     public function cancelTask(User $user, Project $project, Objective $objective, Task $task): Response {
-        if($user->id === $project->user_id){
-            return Response::allow();
-        }
-
         if($objective->id !== $task->objective_id || $project->id !== $objective->project_id){
             return Response::deny('This action is unauthorized, TKPDTK');
+        }
+
+        if($user->id === $project->user_id){
+            return Response::allow();
         }
 
         $hasRole = $user->hasProjectRole($project, ['Manager', 'User']);
         return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, TKPDTK');
     }
 
-    public function updateStatus(User $user, Task $task, string $status): Response{
+    public function updateTaskStatus(User $user, Project $project, Objective $objective, Task $task, string $status = null): Response {
+        if (!$status || $status === TaskStatus::Canceled->name){
+            return Response::deny('This action is unauthorized, TKPUSTK');
+        }
 
-        if($user->hasPermissionTo('updateStatus'))
-            return Response::allow();
-
-        if ($user->hasPermissionTo('completeTask') && $status === TaskStatus::Completed->name){
-            return $user->id === $task->user_id
-                ? Response::allow()
-                : Response::deny("Solo el asignado a la tarea puede marcarla como completada.");
+        if($objective->id !== $task->objective_id || $project->id !== $objective->project_id){
+            return Response::deny('This action is unauthorized, TKPUSTK');
         }
         
-        return Response::deny(  "No tienes permiso para actualizar el estado de la tarea.");
+        if($user->id === $project->user_id){
+                return Response::allow();
+        }
+
+        $hasRole = $user->hasProjectRole($project, ['Manager', 'User']);
+
+        return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, TKPUSTK');
     }
 }

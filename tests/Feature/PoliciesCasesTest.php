@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\enums\TaskStatus;
 use App\Traits\SetTestingData;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -30,35 +31,6 @@ class PoliciesCasesTest extends TestCase
         $this->actingAs($projectOwner)
             ->putJson(route('dispute.resolve', $dispute), ['status' => DisputeStatus::Accepted->name])
             ->assertStatus(200);
-    }
-
-    public function test_manager_and_user_can_update_project_status(){
-        
-        $this->seed(RolesSeeder::class);
-
-        [$manager,,, $objective] = $this->createObjective();
-        $manager->assignRole('Manager');
-        $employee = User::factory()->create()->assignRole('User');
-        $employeeB = User::factory()->create()->assignRole('User');
-        
-        $task = Task::factory()->create(['objective_id' => $objective->id, 'user_id' => $employee->id]);
-
-
-        $this->actingAs($employee)
-            ->putJson(route('task.updateStatus', $task), ['status' => 'Canceled'])
-            ->assertStatus(403);
-
-        $this->actingAs($manager)
-            ->putJson(route('task.updateStatus', $task), ['status' => 'Canceled'])
-            ->assertStatus(418);
-
-        $this->actingAs($employee)
-            ->putJson(route('task.updateStatus', $task), ['status' => 'Completed'])
-            ->assertStatus(418);
-
-        $this->actingAs($employeeB)
-            ->putJson(route('task.updateStatus', $task), ['status' => 'Completed'])
-            ->assertStatus(403);
     }
 
     public function test_viewer_cant_update_anything(){

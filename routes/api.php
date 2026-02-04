@@ -72,9 +72,13 @@ Route::delete( 'projects/{project}/objectives/{objective}/tasks/{task}/cancel', 
     ->name('projects.objectives.tasks.delete')
     ->scopeBindings();
 
-Route::match(['PUT', 'PATCH', 'DELETE'], '/tasks/update-status/{task}', [TaskController::class, 'updateStatus'])
-    ->middleware(EnsureHierarchyIsPermitted::class)
-    ->name('task.updateStatus');
+Route::match(
+        ['PUT', 'PATCH'],
+        'projects/{project}/objectives/{objective}/tasks/{task}/status', 
+        [TaskController::class, 'updateStatus']
+    )->middleware(EnsureHierarchyIsPermitted::class)
+    ->name('projects.objectives.tasks.status')
+    ->scopeBindings();
 
 //Disputes
 Route::match(['PUT', 'PATCH'], '/projects/dispute/{dispute}', [ProjectController::class, 'resolveDispute'])

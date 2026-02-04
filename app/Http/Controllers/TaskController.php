@@ -58,14 +58,11 @@ class TaskController extends Controller
         return $this->sendApiResponse($task, 'Task canceled successfully');
     }
 
-    public function updateStatus(Request $request, Task $task){
-        // Update task status logic here
+    public function updateStatus(Request $request, Project $project, Objective $objective, Task $task): JsonResponse{
+        Gate::authorize('updateTaskStatus', [Task::class, $project, $objective, $task, $request->status]);
 
-        Gate::authorize('updateStatus', [$task, $request->status]);
+        $task->update(['status' => $request->status]);
 
-        return response()->json([
-            'message' => 'Task status updated successfully',
-            'task' => $task,
-        ], 418);
+        return $this->sendApiResponse($task, 'Task status updated successfully', 200);
     }
 }
