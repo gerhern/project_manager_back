@@ -14,15 +14,16 @@ class ProjectPolicy
      * @param Project $project
      * @return Response
      */
-    public function viewProject(User $user, Project $project){
-        
+    public function viewProject(User $user, Project $project)
+    {
+
         //Owner can see their own project
-        if($user->id === $project->user_id){
+        if ($user->id === $project->user_id) {
             return Response::allow();
         }
 
         //Every projects member can see it
-        if($project->users()->where('user_id', $user->id)->exists()){
+        if ($project->users()->where('user_id', $user->id)->exists()) {
             return Response::allow();
         }
 
@@ -35,7 +36,7 @@ class ProjectPolicy
             ->wherePivot('role_id', $roleId)
             ->exists();
 
-        if($isTeamAdmin){
+        if ($isTeamAdmin) {
             return Response::allow();
         }
 
@@ -48,11 +49,14 @@ class ProjectPolicy
      * @param Project $project
      * @return Response
      */
-    public function updateProject(User $user, Project $project): Response {
-
+    public function updateProject(User $user, Project $project): Response
+    {
+        if ($user->id === $project->user_id) {
+            return Response::allow();
+        }
         $hasRole = $user->hasProjectRole($project, 'Manager');
-        
-        return $hasRole ? Response::allow() : Response::deny("This action is unauthorized, PPUP", 403); 
+
+        return $hasRole ? Response::allow() : Response::deny("This action is unauthorized, PPUP", 403);
     }
 
     /**
@@ -61,24 +65,26 @@ class ProjectPolicy
      * @param Project $project
      * @return Response
      */
-    public function cancelProject(User $user, Project $project): Response {
-        if($user->id === $project->user_id){
+    public function cancelProject(User $user, Project $project): Response
+    {
+        if ($user->id === $project->user_id) {
             return Response::allow();
         }
 
         $hasRole = $user->hasProjectRole($project, 'Manager');
-        
-            return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, PPCP', 403);
+
+        return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, PPCP', 403);
     }
 
-    public function createObjective(User $user, Project $project){
-    
-        if($user-> id === $project->user_id){
+    public function createObjective(User $user, Project $project)
+    {
+
+        if ($user->id === $project->user_id) {
             return Response::allow();
         }
 
         $isValidUser = $user->hasProjectRole($project, ['Manager', 'User']);
-        
+
         return $isValidUser ? Response::allow() : Response::deny('This action is unauthorized, PPCO');
     }
 }

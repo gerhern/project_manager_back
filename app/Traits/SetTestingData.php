@@ -137,7 +137,8 @@ trait SetTestingData
         }
 
         $task = Task::factory()->create(array_merge([
-            'objective_id' => $objective->id
+            'objective_id'  => $objective->id,
+            'user_id'       => $user->id ?? null
         ], $attributes));
 
         return [$user, $team, $project, $objective, $task];

@@ -87,7 +87,11 @@ class TaskPolicy
         }
         
         if($user->id === $project->user_id){
-                return Response::allow();
+            return Response::allow();
+        }
+
+        if($task->user_id !== $user->id){
+            return Response::deny('This action is unauthorized, TKPUSTK');
         }
 
         $hasRole = $user->hasProjectRole($project, ['Manager', 'User']);

@@ -78,5 +78,22 @@ class User extends Authenticatable
             })
             ->exists();
     }
+
+    public function hasTeamRole(Team $team, $roles): bool
+    {
+        $roles = is_array($roles) ? $roles : [$roles];
+
+        return \DB::table('memberships')
+            ->where('user_id', $this->id)
+            ->where('model_id', $team->id)
+            ->where('model_type', Team::class)
+            ->whereExists(function ($query) use ($roles) {
+                $query->select(\DB::raw(1))
+                    ->from('roles')
+                    ->whereColumn('roles.id', 'memberships.role_id')
+                    ->whereIn('roles.name', $roles);
+            })
+            ->exists();
+    }
             
 }

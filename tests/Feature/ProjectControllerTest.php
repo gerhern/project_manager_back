@@ -158,7 +158,7 @@ class ProjectControllerTest extends TestCase
     }
 
     public function test_owner_update_dispute_project_status(): void {
-        [$owner, $team, $project] = $this->createProject(['status' => ProjectStatus::CancelInProgress]);
+        [$owner,, $project] = $this->createProject(['status' => ProjectStatus::CancelInProgress]);
 
         $user = User::factory()->create();
         $dispute = $this->createDispute($project, $user);

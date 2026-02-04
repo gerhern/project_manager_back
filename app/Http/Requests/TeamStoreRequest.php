@@ -29,11 +29,11 @@ class TeamStoreRequest extends FormRequest
         ];
     }
 
-    protected function failedValidation(Validator $validator){
-        throw new HttpResponseException(response()->json([
-            'success' => false,
-            'data' => $validator->errors(),
-            'message' => 'Data validation errors'
-        ],422));
-    }
+    // protected function failedValidation(Validator $validator){
+    //     throw new HttpResponseException(response()->json([
+    //         'success' => false,
+    //         'data' => $validator->errors(),
+    //         'message' => 'Data validation errors'
+    //     ],422));
+    // }
 }

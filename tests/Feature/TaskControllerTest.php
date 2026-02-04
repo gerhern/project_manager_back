@@ -228,15 +228,16 @@ class TaskControllerTest extends TestCase
 
     public function test_task_status_can_be_updated(): void {
         $this->seed(RolesSeeder::class);
-        [$owner,, $project, $objective, $task] = $this->createTask();
-
+        [$owner,$team, $project, $objective] = $this->createObjective();
+        
         $stranger = User::factory()->create();
         $viewer = User::factory()->create();
         $user = User::factory()->create();
-
+        
         $this->addUserToProject($project, $viewer, 'Viewer');
         $this->addUserToProject($project, $user, 'User');
-
+        [,,,, $task] = $this->createTask([], $user, $team, $project, $objective);
+        
         $this->actingAs($stranger)
             ->putJson(
                 route('projects.objectives.tasks.status', [$project, $objective, $task]),
@@ -278,5 +279,31 @@ class TaskControllerTest extends TestCase
             ->assertForbidden()
             ->assertJson(['success' => false, 'message' => 'This action is unauthorized, TKPUSTK']);
         $this->assertDatabaseMissing('tasks', ['status' => TaskStatus::Canceled->name]);
+    }
+
+    public function test_user_only_can_update_his_own_tasks(): void {
+        $this->seed(RolesSeeder::class);
+        [$userOwner, $team, $project, $objective]  = $this->createObjective();
+        $user = User::factory()->create();
+
+        $this->addUserToProject($project, $userOwner, 'User');
+        $this->addUserToProject($project, $user, 'User');
+
+        [,,,,$task] = $this->createTask([], $userOwner, $team, $project, $objective);
+
+        $this->actingAs($user)
+            ->putJson(
+                route('projects.objectives.tasks.status', [$project, $objective, $task]),
+                ['status' => TaskStatus::Completed->name])
+            ->assertForbidden()
+            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, TKPUSTK']);
+        
+        $this->actingAs($userOwner)
+            ->putJson(
+                route('projects.objectives.tasks.status',[$project, $objective, $task]),
+                ['status' => TaskStatus::Completed->name])
+            ->assertOk()
+            ->assertJson(['success' => true, 'message' => 'Task status updated successfully']);
+        $this->assertDatabaseHas('tasks', ['status' => TaskStatus::Completed->name]);
     }
 }

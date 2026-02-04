@@ -66,22 +66,6 @@ class TeamControllerTest extends TestCase
         ]);
     }
 
-    public function test_team_creation_fails_validation_with_standardized_format()
-    {
-        $user = User::factory()->create();
-
-        $this->actingAs($user)
-            ->postJson(route('teams.store'), [
-                'name' => 'ab',
-            ])
-            ->assertStatus(422)
-            ->assertJson([
-                'success' => false,
-                'message' => 'Data validation errors',
-            ])
-            ->assertJsonStructure(['data' => ['name']]);
-    }
-
     public function test_it_rolls_back_everything_if_membership_fails()
     {
         $user = User::factory()->create();

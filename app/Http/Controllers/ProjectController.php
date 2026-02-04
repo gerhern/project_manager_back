@@ -65,18 +65,11 @@ class ProjectController extends Controller
         }
 
     }
-    public function update(ProjectUpdateRequest $request, Project $project)
+    public function update(ProjectUpdateRequest $request, Project $project): JsonResponse
     {
         Gate::authorize('updateProject', $project);
-
-        try{
             $project->update($request->validated());
             return $this->sendApiResponse($project, 'Project updated successfully', 200);
-
-        }catch(\Exception $e){
-            \Log::error('Error, can not update project: '.$e->getMessage());
-            return $this->sendApiError('Error, can not update project', 403);
-        }
     }
 
     public function resolveDispute(Request $request, ProjectDispute $dispute): JsonResponse
@@ -111,7 +104,7 @@ class ProjectController extends Controller
         }
     }
 
-    public function show(Request $request, Project $project)
+    public function show(Request $request, Project $project): JsonResponse
     {
         Gate::authorize('viewProject', $project);
         return $this->sendApiResponse($project, 'Project retrieved successfully');
@@ -128,17 +121,24 @@ class ProjectController extends Controller
             return $this->sendApiResponse($project, 'The project has been canceled successfully');
         }
 
-        ProjectDispute::create([
+        try{
+            \DB::beginTransaction();
+             ProjectDispute::create([
             'project_id'    => $project->id,
             'user_id'       => $request->user()->id,
             'expired_at'    => Carbon::now()->addDays(15)->toTimeString(),
             'status'        => DisputeStatus::Open->name
-        ]);
-
-        $project->update([
-                'status' => ProjectStatus::CancelInProgress->name
             ]);
 
-        return $this->sendApiResponse($project, 'An open dispute has been created');
+            $project->update([
+                    'status' => ProjectStatus::CancelInProgress->name
+                ]);
+            \DB::commit();
+            return $this->sendApiResponse($project, 'An open dispute has been created');
+        }catch(\Exception $e){
+            \DB::rollBack();
+            \Log::error('Error trying to cancel project: '.$e->getMessage());
+            return $this->sendApiError('Error trying to cancel project');
+        }
     }
 }
