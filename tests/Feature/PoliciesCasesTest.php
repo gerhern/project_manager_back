@@ -36,11 +36,15 @@ class PoliciesCasesTest extends TestCase
     public function test_viewer_cant_update_anything(){
         $this->seed(RolesSeeder::class);
 
-        $viewer = User::factory()->create()->assignRole('Viewer');
-        $employee = User::factory()->create()->assignRole('User');
-        $manager = User::factory()->create()->assignRole('Manager');
+        $viewer = User::factory()->create();
+        $employee = User::factory()->create();
+        $manager = User::factory()->create();
 
         [,, $project, $objective] = $this->createObjective([], $employee);
+        
+        $this->addUserToProject($project, $viewer, 'Viewer');
+        $this->addUserToProject($project, $employee, 'User');
+        $this->addUserToProject($project, $manager, 'Manager');
 
         $task = Task::factory()->create(['objective_id' => $objective->id]);
 
@@ -67,9 +71,8 @@ class PoliciesCasesTest extends TestCase
             ->assertStatus(200)
             ->assertJsonStructure(['success', 'message']);
 
-        $this->actingAs($manager);
-
-            $this->putJson(route('projects.objectives.update', [$project, $objective]), ['title' => 'Testing'])
+        $this->actingAs($manager)
+            ->putJson(route('projects.objectives.update', [$project, $objective]), ['title' => 'Testing'])
             ->assertStatus(200)
             ->assertJsonStructure(['success', 'message']);
     }

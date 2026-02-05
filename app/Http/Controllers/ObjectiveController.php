@@ -28,9 +28,6 @@ class ObjectiveController extends Controller
 
     public function store(ObjectiveStoreRequest $request, Project $project): JsonResponse{
         Gate::authorize('createObjective', $project);
-
-        try{
-            \DB::beginTransaction();
             $objective = Objective::create([
                 'title'         => $request->title,
                 'description'   => $request->description,
@@ -38,14 +35,7 @@ class ObjectiveController extends Controller
                 'project_id'    => $project->id
             ]);
     
-            \DB::commit();
             return $this->sendApiResponse($objective, 'Objective created successfully', 201);
-        }catch(\Exception $e){
-            \DB::rollBack();
-            \Log::error('Error creating objective: ' . $e->getMessage());
-            return $this->sendApiError('Error updating objective');
-        }
-
     }
 
     public function update(ObjectiveUpdateRequest $request, Project $project, Objective $objective):JsonResponse{

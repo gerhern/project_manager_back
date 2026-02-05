@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Traits\SetTestingData;
+use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
@@ -13,37 +15,37 @@ use Spatie\Permission\Models\Role;
 
 class UserHasOneRoleTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, SetTestingData;
     
     
 
     public function test_user_cannot_have_multiple_roles_in_same_project(): void
     {
+        $this->seed(RolesSeeder::class);
         $this->expectException(\Illuminate\Database\QueryException::class);
 
-        $user = User::factory()->create();
-        $team = Team::factory()->create();
-        $project = Project::factory()->create(['team_id' => $team->id]);
-        $role1 = Role::factory()->create(['name' => 'member']);
-        $role2 = Role::factory()->create(['name' => 'admin']);
+        [$user, $team, $project] = $this->createProject();
+
+        $role1 = $this->getCachedRoleId('Member');
+        $role2 = $this->getCachedRoleId('Admin');
 
         $user->projects()->attach($project->id, [
             'team_id' => $team->id,
-            'role_id' => $role1->id,
+            'role_id' => $role1
         ]);
 
         // Attempt to attach a second role for the same user and project
         $user->projects()->attach($project->id, [
             'team_id' => $team->id,
-            'role_id' => $role2->id,
+            'role_id' => $role2
         ]);
     }
 
     public function test_it_returns_404_in_standardized_format_when_model_not_found()
     {
         $user = User::factory()->create();
-        // Intentamos acceder a un proyecto inexistente
-        $this->actingAs($user)->getJson('/projects/999999')
+
+        $this->actingAs($user)->getJson(route('projects.objectives.show', ['100', '100']))
             ->assertStatus(404)
             ->assertJson([
                 'success' => false,

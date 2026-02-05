@@ -62,31 +62,31 @@ trait SetTestingData
         return [$user, $team, $project];
     }
 
-    public function addUserToProject(Project $project, User $user, string $rolName = 'Manager'): void
+    public function addUserToProject(Project $project, User $user, string $roleName = 'Manager'): void
     {
-        $user->projects()->attach($project->id, ['role_id' => $this->getCachedRoleId($rolName)]);
+        $user->projects()->attach($project->id, ['role_id' => $this->getCachedRoleId($roleName)]);
     }
 
     /**
      * create a new register on memberships table linking user with teams 
      * @param Team $team New user will be added to this $team
      * @param User $user User to add to the provided team
-     * @param string $rolName The user will be added to the team with this role (Role must exists)
+     * @param string $roleName The user will be added to the team with this role (Role must exists)
      * @return void
      */
-    public function addUserToTeam(Team $team, User $user, string $rolName = 'Admin'): void
+    public function addUserToTeam(Team $team, User $user, string $roleName = 'Admin'): void
     {
-        $user->teams()->attach($team->id, ['role_id' => $this->getCachedRoleId($rolName)]);
+        $user->teams()->attach($team->id, ['role_id' => $this->getCachedRoleId($roleName)]);
     }
     
     /**
      * Retrieves a role model by role name
-     * @param string $rolname Role name must be the same for a existing role
+     * @param string $rolename Role name must be the same for a existing role
      * @return Role|null
      */
-    public function getRole(string $rolname): Role
+    public function getRole(string $rolename): Role
     {
-        return Role::where('name', $rolname)->first();
+        return Role::where('name', $rolename)->first();
     }
 
     public function createObjective(array $attributes = [], User $user = null, Team $team = null, Project $project = null): array
@@ -142,6 +142,16 @@ trait SetTestingData
         ], $attributes));
 
         return [$user, $team, $project, $objective, $task];
+    }
+
+    public function updateTaskAs(array $data = [], User $user, Project $project, Objective $objective, Task $task){
+    $defaultData = ['title' => 'Updated Task', 'due_date' => now()->addDays(2)->toDateString()];
+    
+    return $this->actingAs($user)
+        ->putJson(
+            route('projects.objectives.tasks.update', [$project, $objective, $task]),
+            array_merge($defaultData, $data)
+        );
     }
 
     public function createDispute(Project $project, User $user, $status = DisputeStatus::Open): ProjectDispute {

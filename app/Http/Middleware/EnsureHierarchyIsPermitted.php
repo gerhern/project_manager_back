@@ -18,45 +18,22 @@ class EnsureHierarchyIsPermitted
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $target = $this->resolveTarget($request);
+            if ($request->isMethod('GET')) {
+            return $next($request);
+        }
 
-        if (!$target) return $next($request);
+        // Obtenemos todos los modelos inyectados en la URL (Project, Objective, Task)
+        $parameters = $request->route()->parameters();
 
-        $errorModel = $this->hasRestrictedAncestors($target);
-
-        if ($errorModel) {
-            $errorModelName = class_basename($errorModel);
-            throw new AccessDeniedHttpException("Can't modify resource; {$errorModelName} is {$errorModel->status->name}");
+        foreach ($parameters as $model) {
+            if (isset($model->status) && $model->status->isRestricted()) {
+                $modelName = class_basename($model);
+                throw new AccessDeniedHttpException(
+                    "Can't modify resource; {$modelName} is {$model->status->name}"
+                );
+            }
         }
 
         return $next($request);
-    }
-
-    private function resolveTarget($request)
-    {
-        if ($request->isMethod('POST')) {
-            if ($request->has('project_id')) return Project::find($request->project_id);
-            if ($request->has('objective_id')) return Objective::find($request->objective_id);
-        }
-
-        return collect($request->route()->parameters())->first();
-    }
-
-    private function hasRestrictedAncestors($model)
-    {
-        if (isset($model->status) && $model->status->isRestricted()) {
-            return $model;
-        }
-
-        if ($model instanceof Task) {
-            return $this->hasRestrictedAncestors($model->objective);
-        }
-
-        if ($model instanceof Objective) {
-            return $this->hasRestrictedAncestors($model->project);
-        }
-
-
-        return null;
     }
 }

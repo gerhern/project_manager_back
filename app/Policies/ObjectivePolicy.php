@@ -10,6 +10,11 @@ use Illuminate\Auth\Access\Response;
 class ObjectivePolicy
 {
     public function updateObjective(User $user, $objective, $project){
+
+        if($project->id !== $objective->project_id){
+            return Response::deny('This action is unauthorized, OPUO');
+        }
+
         if($user->id === $project->user_id || $user->id === $objective->user_id){
             return Response::allow();
         }

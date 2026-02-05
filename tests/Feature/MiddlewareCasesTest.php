@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\{ProjectStatus, ObjectiveStatus, TaskStatus, TeamStatus};
 use App\Models\{Project, Task, Objective, Team, User};
 use App\Traits\SetTestingData;
+use Carbon\Carbon;
 use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -17,7 +18,7 @@ class MiddlewareCasesTest extends TestCase
     /**
      * @dataProvider RestrictedResourceProvider
      */
-    public function test_cannot_modify_resources_in_restricted_states(string $modelClass, string $routeName, $status, $verb) :void{
+    public function test_cannot_modify_resources_in_restricted_states(string $modelClass, string $routeName, $status, $verb, $jsonData) :void{
  
        [$user, $team] = $this->createProject();
 
@@ -45,12 +46,14 @@ class MiddlewareCasesTest extends TestCase
             Task::class      => [$resource->objective->project, $resource->objective, $resource],
             default          => [$resource],
         };
+        // dd($verb, $routeName, $routeParams, $jsonData);
 
         $response = $this->actingAs($user)->json(
             $verb, 
             route($routeName, $routeParams), 
-            $verb === 'DELETE' ? [] : ['name' => 'Attempted Update']
+            $verb === 'DELETE' ? [] : $jsonData
         );
+        // dd($response->getContent());
 
         $classNameModel = class_basename($modelClass);
         $response->assertStatus(403);
@@ -67,50 +70,58 @@ class MiddlewareCasesTest extends TestCase
                 Team::class,
                 'teams.inactive',
                 TeamStatus::Inactive,
-                'DELETE'
+                'DELETE',
+                ['name' => 'Attempt Update']
             ],
-            // 'Project is Canceled' => [
-            //     Project::class,
-            //     'projects.update',
-            //     ProjectStatus::Canceled,
-            //     'PUT'
-            // ],
-            // 'Project is Completed' => [
-            //     Project::class,
-            //     'projects.update',
-            //     ProjectStatus::Completed,
-            //     'PATCH'
-            // ],
-            // 'Project is CancelInProgress' => [
-            //     Project::class,
-            //     'projects.update',
-            //     ProjectStatus::CancelInProgress,
-            //     'DELETE'
-            // ],
-            // 'Objective is Completed' => [
-            //     Objective::class,
-            //     'projects.objectives.update',
-            //     ObjectiveStatus::Completed,
-            //     'PUT'
-            // ],
-            // 'Objective is Canceled' => [
-            //     Objective::class,
-            //     'projects.objectives.update',
-            //     ObjectiveStatus::Canceled,
-            //     'PATCH'
-            // ],
-            // 'Task is Completed' => [
-            //     Task::class,
-            //     'task.update',
-            //     TaskStatus::Completed,
-            //     'DELETE'
-            // ],
-            // 'Task is Canceled' => [
-            //     Task::class,
-            //     'task.update',
-            //     TaskStatus::Canceled,
-            //     'PUT'
-            // ],
+            'Project is Canceled' => [
+                Project::class,
+                'projects.update',
+                ProjectStatus::Canceled,
+                'PUT',
+                ['name' => 'Attempt Update']
+            ],
+            'Project is Completed' => [
+                Project::class,
+                'projects.update',
+                ProjectStatus::Completed,
+                'PATCH',
+                ['name' => 'Attempt Update']
+            ],
+            'Project is CancelInProgress' => [
+                Project::class,
+                'projects.update',
+                ProjectStatus::CancelInProgress,
+                'PATCH',
+                ['name' => 'Attempt Update']
+            ],
+            'Objective is Completed' => [
+                Objective::class,
+                'projects.objectives.update',
+                ObjectiveStatus::Completed,
+                'PUT',
+                ['title' => 'Attempt Update']
+            ],
+            'Objective is Canceled' => [
+                Objective::class,
+                'projects.objectives.update',
+                ObjectiveStatus::Canceled,
+                'PATCH',
+                ['title' => 'Attempt Update']
+            ],
+            'Task is Completed' => [
+                Task::class,
+                'projects.objectives.tasks.update',
+                TaskStatus::Completed,
+                'PUT',
+                ['title' => 'Attempt Update', 'due_date' => Carbon::now()->addDays(2)->toDateTimeString()]
+            ],
+            'Task is Canceled' => [
+                Task::class,
+                'projects.objectives.tasks.update',
+                TaskStatus::Canceled,
+                'PUT',
+                ['title' => 'Attempt Update', 'due_date' => Carbon::now()->addDays(2)->toDateTimeString()]
+            ],
         ];
     }
 
@@ -153,8 +164,6 @@ class MiddlewareCasesTest extends TestCase
         $this->seed(RolesSeeder::class);
 
         [$user, $teamA] = $this->createTeam();
-
-        $user->assignRole('Admin');
 
         [, $teamB] = $this->createTeam(['status' => TeamStatus::Inactive]);
 
