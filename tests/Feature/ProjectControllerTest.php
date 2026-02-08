@@ -8,10 +8,12 @@ use App\Http\Controllers\ProjectController;
 use App\Models\Project;
 use App\Models\ProjectDispute;
 use App\Models\User;
+use App\Notifications\DisputeStartNotification;
 use App\Traits\SetTestingData;
 use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class ProjectControllerTest extends TestCase
@@ -202,6 +204,36 @@ class ProjectControllerTest extends TestCase
         $this->actingAs($user)
             ->putJson(route('dispute.resolve', $dispute), [DisputeStatus::Accepted])
             ->assertJson(['success' => false, 'message' => 'This project is inactive, PPDUDS']);
+    }
+
+    public function test_owner_is_notified_when_dispute_is_created(): void
+    {
+        $this->seed(RolesSeeder::class);
+        // 1. Arrange: Inicializamos el Fake y preparamos datos
+        Notification::fake();
+        
+        [$owner, $team, $project] = $this->createProject();
+        $stranger = User::factory()->create();
+
+        $this->addUserToProject($project, $stranger, 'Manager');
+
+        // 2. Act: Realizamos la acción que dispara la notificación (vía API)
+        $this->actingAs($stranger)
+            ->deleteJson(route('projects.cancel', $project))
+            ->assertOk();
+
+        // 3. Assert: Verificamos que se envió la notificación al dueño
+        Notification::assertSentTo(
+            $owner, 
+            DisputeStartNotification::class,
+            function ($notification, $channels) use ($project) {
+                // Verificamos que contenga el proyecto correcto
+                return $notification->project->id === $project->id;
+            }
+        );
+
+        // Verificamos que NO se envió a otros usuarios (importante para evitar spam)
+        Notification::assertNotSentTo($stranger, DisputeStartNotification::class);
     }
 
  }

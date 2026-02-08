@@ -7,6 +7,7 @@ use App\Enums\ProjectStatus;
 use App\Http\Requests\ProjectStoreRequest;
 use App\Http\Requests\ProjectUpdateRequest;
 use App\Models\Team;
+use App\Notifications\DisputeStartNotification;
 use App\Traits\ApiResponse;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -134,6 +135,9 @@ class ProjectController extends Controller
                     'status' => ProjectStatus::CancelInProgress->name
                 ]);
             \DB::commit();
+
+            $project->creator->notify(new DisputeStartNotification($project));
+
             return $this->sendApiResponse($project, 'An open dispute has been created');
         }catch(\Exception $e){
             \DB::rollBack();

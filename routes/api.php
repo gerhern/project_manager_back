@@ -19,7 +19,6 @@ Route::match(['PUT', 'PATCH'], '/projects/{project}', [ProjectController::class,
     ->name('projects.update');
 
 Route::get('/projects/show/{project}', [ProjectController::class, 'show'])
-    // ->middleware(EnsureHierarchyIsPermitted::class)
     ->name('project.show');
 
 Route::delete('/projects/cancel/{project}', [ProjectController::class, 'cancel'])
