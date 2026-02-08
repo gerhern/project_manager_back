@@ -154,11 +154,12 @@ trait SetTestingData
         );
     }
 
-    public function createDispute(Project $project, User $user, $status = DisputeStatus::Open): ProjectDispute {
+    public function createDispute(Project $project, User $user, $status = DisputeStatus::Open,  $date = null ): ProjectDispute {
+        $date ??= Carbon::now()->addDays(15);
         return ProjectDispute::create([
             'project_id'    => $project->id,
             'user_id'       => $user->id,
-            'expired_at'    => Carbon::now()->addDays(15)->toTimeString(),
+            'expired_at'    => $date,
             'status'        => $status->name
         ]);
     }

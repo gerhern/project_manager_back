@@ -126,7 +126,7 @@ class ProjectController extends Controller
              ProjectDispute::create([
             'project_id'    => $project->id,
             'user_id'       => $request->user()->id,
-            'expired_at'    => Carbon::now()->addDays(15)->toTimeString(),
+            'expired_at'    => Carbon::now()->addDays(15),
             'status'        => DisputeStatus::Open->name
             ]);
 
