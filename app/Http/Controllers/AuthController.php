@@ -28,4 +28,11 @@ class AuthController extends Controller
 
         return  $this->sendApiResponse(['user' => New UserResource($user), 'token' => $token], 'Login successfull');
     }
+
+    public function logout(Request $request): JsonResponse {
+
+        $request->user()->currentAccessToken()->delete();
+
+        return $this->sendApiResponse([], 'Logout successfull');
+    }
 }

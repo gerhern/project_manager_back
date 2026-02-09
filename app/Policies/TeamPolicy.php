@@ -18,8 +18,12 @@ class TeamPolicy
      */
     public function updateTeam(User $user, Team $team): Response
     {
-        $hasRole = $user->teams()->where('model_id', $team->id)
-        ->wherePivot('role_id', Role::where('name', 'Admin')->value('id'))
+        $hasRole = Membership::where('user_id', $user->id)
+        ->where('model_id', $team->id)
+        ->where('model_type', Team::class)
+        ->whereHas('role', function($q) {
+            $q->whereIn('name', ['Admin', 'Owner']);
+        })
         ->exists();
 
         return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, TPUT');
@@ -33,9 +37,14 @@ class TeamPolicy
      */
     public function inactiveTeam(User $user, Team $team): Response {    
 
-        $hasRole =  $user->teams()->where('model_id', $team->id)
-        ->wherePivot('role_id', Role::where('name', 'Owner')->value('id'))
-        ->exists();
+
+        $hasRole = Membership::where('user_id', $user->id)
+            ->where('model_id', $team->id)
+            ->where('model_type', Team::class)
+            ->whereHas('role', function($q) {
+                $q->whereIn('name', ['Admin', 'Owner']);
+            })
+            ->exists();
 
         return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, TPIT');
 

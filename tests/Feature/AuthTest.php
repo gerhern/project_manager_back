@@ -41,20 +41,20 @@ class AuthTest extends TestCase
             ->assertJsonValidationErrors(['email', 'password']);
     }
 
-    // public function test_user_can_logout(): void
-    // {
-    //     $user = User::factory()->create();
-    //     $token = $user->createToken('test-token')->plainTextToken;
+    public function test_user_can_logout(): void
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
 
-    //     // Actuamos como el usuario usando el token generado
-    //     $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-    //         ->postJson('/api/logout');
+        // Actuamos como el usuario usando el token generado
+        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+            ->postJson(route('logout'));
 
-    //     $response->assertOk();
+        $response->assertOk();
         
-    //     // Verificamos que el token fue eliminado de la DB
-    //     $this->assertCount(0, $user->fresh()->tokens);
-    // }
+        // Verificamos que el token fue eliminado de la DB
+        $this->assertCount(0, $user->fresh()->tokens);
+    }
 
     
 }

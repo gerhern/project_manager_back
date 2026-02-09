@@ -18,7 +18,15 @@ class TeamResource extends JsonResource
             'id'   => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'status' => $this->status
+            'status' => $this->status->name,
+            'role'  => $this->whenPivotLoaded('memberships', function () {
+            return match($this->pivot->role_id) {
+                1 => 'Owner',
+                2 => 'Admin',
+                3 => 'Member',
+                default => 'Unknown',
+            };
+        }),
         ];
     }
 }

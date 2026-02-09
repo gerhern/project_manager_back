@@ -12,6 +12,10 @@ Route::post('/login', [AuthController::class, 'login'])
 
 
 Route::middleware('auth:sanctum')->group(function(){
+
+    Route::post('/logout', [AuthController::class, 'logout'])
+    ->name('logout');
+
     //Projects
     Route::get('/projects/index', [ProjectController::class, 'index'])
         ->name('projects.index');

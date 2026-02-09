@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\TeamStatus;
 use App\Http\Requests\TeamStoreRequest;
 use App\Http\Requests\TeamUpdateRequest;
+use App\Http\Resources\TeamResource;
 use App\Models\Team;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -17,7 +18,7 @@ class TeamController extends Controller
     use ApiResponse;
     public function index(Request $request): JsonResponse{
         $teams = $request->user()->teams()->withPivot('role_id')->get();
-        return $this->sendApiResponse($teams, "Data retrieved successfuly", 200);
+        return $this->sendApiResponse(TeamResource::collection($teams), "Data retrieved successfuly");
     }
 
     public function store(TeamStoreRequest $request): JsonResponse{
@@ -35,7 +36,7 @@ class TeamController extends Controller
             ]);
 
             \DB::commit();
-            return $this->sendApiResponse($team, 'Team created successfully', 201);
+            return $this->sendApiResponse(new TeamResource($team), 'Team created successfully', 201);
 
         } catch(\Exception $e){
             \DB::rollBack();
@@ -46,7 +47,7 @@ class TeamController extends Controller
     }
 
     public function show(Request $request, Team $team): JsonResponse{
-        return $this->sendApiResponse($team, 'Team retrieved successfully');
+        return $this->sendApiResponse(new TeamResource($team), 'Team retrieved successfully');
     }
 
     public function update(TeamUpdateRequest $request, Team $team): JsonResponse{
@@ -54,7 +55,7 @@ class TeamController extends Controller
         
         $team->update($request->validated());
 
-        return $this->sendApiResponse($team, 'Team updated successfully.', 200);
+        return $this->sendApiResponse(new TeamResource($team), 'Team updated successfully.', 200);
     }
 
     public function inactiveTeam(Request $request, Team $team): JsonResponse {
@@ -62,7 +63,7 @@ class TeamController extends Controller
 
         $team->update(['status' => TeamStatus::Inactive->name]);
 
-        return $this->sendApiResponse([],'Team inactivated successfully');
+        return $this->sendApiResponse(new TeamResource($team),'Team inactivated successfully');
     }
 
     
