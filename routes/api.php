@@ -1,103 +1,109 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\{ EnsureHierarchyIsPermitted};
 use App\Http\Controllers\{ProjectController, ObjectiveController, TaskController, TeamController};
 
 
-//Projects
-Route::get('/projects/index', [ProjectController::class, 'index'])
-    ->name('projects.index');
+Route::post('/login', [AuthController::class, 'login'])
+    ->name('login');
 
-Route::post('/projects/store', [ProjectController::class, 'store'])
-    ->middleware(EnsureHierarchyIsPermitted::class)
-    ->name('projects.store');
 
-Route::match(['PUT', 'PATCH'], '/projects/{project}', [ProjectController::class, 'update'])
-    ->middleware(EnsureHierarchyIsPermitted::class)
-    ->name('projects.update');
+Route::middleware('auth:sanctum')->group(function(){
+    //Projects
+    Route::get('/projects/index', [ProjectController::class, 'index'])
+        ->name('projects.index');
 
-Route::get('/projects/show/{project}', [ProjectController::class, 'show'])
-    ->name('project.show');
+    Route::post('/projects/store', [ProjectController::class, 'store'])
+        ->middleware(EnsureHierarchyIsPermitted::class)
+        ->name('projects.store');
 
-Route::delete('/projects/cancel/{project}', [ProjectController::class, 'cancel'])
-    ->middleware(EnsureHierarchyIsPermitted::class)
-    ->name('projects.cancel');
+    Route::match(['PUT', 'PATCH'], '/projects/{project}', [ProjectController::class, 'update'])
+        ->middleware(EnsureHierarchyIsPermitted::class)
+        ->name('projects.update');
 
-//Objectives
-Route::get('/projects/{project}/objectives', [ObjectiveController::class, 'index'])
-    ->name('projects.objectives.index');
+    Route::get('/projects/show/{project}', [ProjectController::class, 'show'])
+        ->name('project.show');
 
-Route::post('/projects/{project}/objectives/store', [ObjectiveController::class, 'store'])
-    ->middleware(EnsureHierarchyIsPermitted::class)
-    ->name('projects.objectives.store');
+    Route::delete('/projects/cancel/{project}', [ProjectController::class, 'cancel'])
+        ->middleware(EnsureHierarchyIsPermitted::class)
+        ->name('projects.cancel');
 
-Route::match(['PUT', 'PATCH'],'projects/{project}/objectives/{objective}', [ObjectiveController::class, 'update'])
-    ->middleware(EnsureHierarchyIsPermitted::class)
-    ->name('projects.objectives.update')
-    ->scopeBindings();
+    //Objectives
+    Route::get('/projects/{project}/objectives', [ObjectiveController::class, 'index'])
+        ->name('projects.objectives.index');
 
-Route::get('projects/{project}/objectives/{objective}', [ObjectiveController::class, 'show'])
-    ->name('projects.objectives.show')
-    ->scopeBindings();
+    Route::post('/projects/{project}/objectives/store', [ObjectiveController::class, 'store'])
+        ->middleware(EnsureHierarchyIsPermitted::class)
+        ->name('projects.objectives.store');
 
-Route::delete('projects/{project}/objectives/{objective}', [ObjectiveController::class, 'cancel'])
-    ->middleware(EnsureHierarchyIsPermitted::class)
-    ->name('projects.objectives.delete')
-    ->scopeBindings();
+    Route::match(['PUT', 'PATCH'],'projects/{project}/objectives/{objective}', [ObjectiveController::class, 'update'])
+        ->middleware(EnsureHierarchyIsPermitted::class)
+        ->name('projects.objectives.update')
+        ->scopeBindings();
 
-//Tasks
-Route::get('projects/{project}/objectives/{objective}/tasks', [TaskController::class, 'index'])
-    ->name('projects.objectives.tasks.index')
-    ->scopeBindings();
+    Route::get('projects/{project}/objectives/{objective}', [ObjectiveController::class, 'show'])
+        ->name('projects.objectives.show')
+        ->scopeBindings();
 
-Route::post('projects/{project}/objectives/{objective}/store', [TaskController::class, 'store'])
-    ->name('projects.objectives.tasks.store')
-    ->middleware(EnsureHierarchyIsPermitted::class)
-    ->scopeBindings();
+    Route::delete('projects/{project}/objectives/{objective}', [ObjectiveController::class, 'cancel'])
+        ->middleware(EnsureHierarchyIsPermitted::class)
+        ->name('projects.objectives.delete')
+        ->scopeBindings();
 
-Route::get('projects/{project}/objectives/{objective}/tasks/{task}', [TaskController::class, 'show'])
-    ->name('projects.objectives.tasks.show')
-    ->scopeBindings();
+    //Tasks
+    Route::get('projects/{project}/objectives/{objective}/tasks', [TaskController::class, 'index'])
+        ->name('projects.objectives.tasks.index')
+        ->scopeBindings();
 
-Route::match(['PUT', 'PATCH'], 'projects/{project}/objectives/{objective}/tasks/{task}/update', [TaskController::class, 'update'])
-    ->middleware(EnsureHierarchyIsPermitted::class)
-    ->name('projects.objectives.tasks.update')
-    ->scopeBindings();
+    Route::post('projects/{project}/objectives/{objective}/store', [TaskController::class, 'store'])
+        ->name('projects.objectives.tasks.store')
+        ->middleware(EnsureHierarchyIsPermitted::class)
+        ->scopeBindings();
 
-Route::delete( 'projects/{project}/objectives/{objective}/tasks/{task}/cancel', [TaskController::class, 'cancelTask'])
-    ->middleware(EnsureHierarchyIsPermitted::class)
-    ->name('projects.objectives.tasks.delete')
-    ->scopeBindings();
+    Route::get('projects/{project}/objectives/{objective}/tasks/{task}', [TaskController::class, 'show'])
+        ->name('projects.objectives.tasks.show')
+        ->scopeBindings();
 
-Route::match(
-        ['PUT', 'PATCH'],
-        'projects/{project}/objectives/{objective}/tasks/{task}/status', 
-        [TaskController::class, 'updateStatus']
-    )->middleware(EnsureHierarchyIsPermitted::class)
-    ->name('projects.objectives.tasks.status')
-    ->scopeBindings();
+    Route::match(['PUT', 'PATCH'], 'projects/{project}/objectives/{objective}/tasks/{task}/update', [TaskController::class, 'update'])
+        ->middleware(EnsureHierarchyIsPermitted::class)
+        ->name('projects.objectives.tasks.update')
+        ->scopeBindings();
 
-//Disputes
-Route::match(['PUT', 'PATCH'], '/projects/dispute/{dispute}', [ProjectController::class, 'resolveDispute'])
-    ->name('dispute.resolve');
+    Route::delete( 'projects/{project}/objectives/{objective}/tasks/{task}/cancel', [TaskController::class, 'cancelTask'])
+        ->middleware(EnsureHierarchyIsPermitted::class)
+        ->name('projects.objectives.tasks.delete')
+        ->scopeBindings();
 
-//Teams
-Route::get('/teams', [TeamController::class, 'index'])
-    ->name('teams.index');
+    Route::match(
+            ['PUT', 'PATCH'],
+            'projects/{project}/objectives/{objective}/tasks/{task}/status', 
+            [TaskController::class, 'updateStatus']
+        )->middleware(EnsureHierarchyIsPermitted::class)
+        ->name('projects.objectives.tasks.status')
+        ->scopeBindings();
 
-Route::post('/teams/create', [TeamController::class, 'store'])
-    ->name('teams.store');
+    //Disputes
+    Route::match(['PUT', 'PATCH'], '/projects/dispute/{dispute}', [ProjectController::class, 'resolveDispute'])
+        ->name('dispute.resolve');
 
-Route::get('/teams/{team}', [TeamController::class, 'show'])
-    ->name('teams.show');
+    //Teams
+    Route::get('/teams', [TeamController::class, 'index'])
+        ->name('teams.index');
 
-Route::match(['PUT', 'PATCH'], '/teams/{team}/update', [TeamController::class, 'update'])
-    ->middleware(EnsureHierarchyIsPermitted::class)
-    ->name('teams.update');
+    Route::post('/teams/create', [TeamController::class, 'store'])
+        ->name('teams.store');
 
-Route::delete('teams/inactive/{team}', [TeamController::class, 'inactiveTeam'])
-    ->middleware(EnsureHierarchyIsPermitted::class)
-    ->name('teams.inactive');
+    Route::get('/teams/{team}', [TeamController::class, 'show'])
+        ->name('teams.show');
 
+    Route::match(['PUT', 'PATCH'], '/teams/{team}/update', [TeamController::class, 'update'])
+        ->middleware(EnsureHierarchyIsPermitted::class)
+        ->name('teams.update');
+
+    Route::delete('teams/inactive/{team}', [TeamController::class, 'inactiveTeam'])
+        ->middleware(EnsureHierarchyIsPermitted::class)
+        ->name('teams.inactive');
+});

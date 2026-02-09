@@ -28,8 +28,4 @@ class Team extends Model
             ->withPivot('role_id')
             ->withTimestamps();
     }
-
-//     public function roles(){
-//         return $this->morphedByMany()
-//     }
 }
