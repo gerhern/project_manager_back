@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\DisputeStatus;
 use App\Enums\ProjectStatus;
+use App\Enums\RoleList;
 use App\Http\Requests\ProjectStoreRequest;
 use App\Http\Requests\ProjectUpdateRequest;
 use App\Http\Resources\ProjectResource;
@@ -29,7 +30,7 @@ class ProjectController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $projects = $request->user()->projects()->withPivot('role_id')->get();
+        $projects = $request->user()->projects()->withPivot('role_id')->with('team')->get();
         return $this->sendApiResponse(ProjectResource::collection($projects), 'Projects retrieved successfully');
     }
 
@@ -38,17 +39,17 @@ class ProjectController extends Controller
      * @param ProjectStoreRequest $request
      * @return void
      */
-    public function store(ProjectStoreRequest $request): JsonResponse
+    public function store(ProjectStoreRequest $request, Team $team): JsonResponse
     {
-        Gate::authorize('createProject', Team::find($request->team_id));
+        Gate::authorize('createProject', [Team::class, $team]);
         try {
             \DB::beginTransaction();
-            $managerRoleId = Role::where('name', 'Manager')->first('id')->id;
+            $managerRoleId = Role::where('name', RoleList::Manager->value)->first('id')->id;
             $project = Project::create([
                 'name' => $request->name,
                 'description' => $request->description ?? null,
                 'status' => ProjectStatus::Active,
-                'team_id' => $request->team_id,
+                'team_id' => $team->id,
                 'user_id' => $request->user()->id
             ]);
 
@@ -57,7 +58,7 @@ class ProjectController extends Controller
             ]);
 
             \DB::commit();
-            return $this->sendApiResponse($project, 'Project created successfully', 201);
+            return $this->sendApiResponse(new ProjectResource($project), 'Project created successfully', 201);
 
         } catch (\Exception $e) {
             \DB::rollBack();
@@ -106,9 +107,9 @@ class ProjectController extends Controller
         }
     }
 
-    public function show(Request $request, Project $project): JsonResponse
+    public function show(Request $request,Team $team, Project $project): JsonResponse
     {
-        Gate::authorize('viewProject', $project);
+        Gate::authorize('viewProject', [Project::class, $team, $project]);
         return $this->sendApiResponse($project, 'Project retrieved successfully');
     }
 

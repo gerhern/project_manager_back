@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\RoleList;
 use App\Enums\TeamStatus;
 use App\Models\Team;
 use App\Models\User;
@@ -62,7 +63,7 @@ class TeamControllerTest extends TestCase
             'user_id' => $user->id,
             'model_id' => $team->id,
             'model_type' => Team::class,
-            'role_id' => $this->getRole('Admin')->id
+            'role_id' => $this->getRole(RoleList::Owner->value)->id
         ]);
     }
 
@@ -109,7 +110,7 @@ class TeamControllerTest extends TestCase
     public function test_only_owner_can_update_status(): void {
         [$owner, $team] = $this->createTeam();
         $stranger = User::factory()->create();
-        $this->addUserToTeam($team, $owner, 'Owner');
+        $this->addUserToTeam($team, $owner, RoleList::Owner->value);
 
         $this->actingAs($stranger)
             ->deleteJson(route('teams.inactive', $team))

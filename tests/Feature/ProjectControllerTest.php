@@ -33,7 +33,7 @@ class ProjectControllerTest extends TestCase
         $this->addUserToProject($projectB, $owner);
 
         $onwerResponse = $this->actingAs($owner)
-            ->getJson(route('projects.index'))
+            ->getJson(route('projects.index',[$team]))
             ->assertJson(['success' => true, 'message' => 'Projects retrieved successfully'])
             ->assertJsonCount(2, 'data');
 
@@ -42,7 +42,7 @@ class ProjectControllerTest extends TestCase
         $this->assertContains($projectB->id, $ownerIds);
 
         $memberResponse = $this->actingAs($member)
-            ->getJson(route('projects.index'))
+            ->getJson(route('projects.index', [$team]))
             ->assertJson(['success' => true, 'message' => 'Projects retrieved successfully'])
             ->assertJsonCount(1, 'data');
 
@@ -50,7 +50,7 @@ class ProjectControllerTest extends TestCase
         $this->assertContains($project->id, $memberIds);
 
         $this->actingAs($stranger)
-            ->getJson(route('projects.index'))
+            ->getJson(route('projects.index', [$team]))
             ->assertJson(['success' => true, 'message' => 'Projects retrieved successfully'])
             ->assertJsonCount(0, 'data');
     }
@@ -69,13 +69,13 @@ class ProjectControllerTest extends TestCase
         $this->addUserToTeam($team, $member, 'Member');
 
         $this->actingAs($member)
-            ->postJson(route('projects.store'), ['name' => 'memberProject', 'team_id' => $team->id])
+            ->postJson(route('projects.store', [$team]), ['name' => 'memberProject', 'team_id' => $team->id])
             ->assertJson(['success' => false, 'message' => 'This action is unauthorized, TPCP']);
         
         $this->assertDatabaseMissing('projects', ['name' => 'memberProject']);
 
         $this->actingAs($admin)
-            ->postJson(route('projects.store'), ['name' => 'adminProject', 'team_id' => $team->id])
+            ->postJson(route('projects.store', [$team]), ['name' => 'adminProject', 'team_id' => $team->id])
             ->assertStatus(201)
             ->assertJson(['success' => true, 'message' => 'Project created successfully']);
 

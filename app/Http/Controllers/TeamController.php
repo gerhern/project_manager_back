@@ -25,7 +25,7 @@ class TeamController extends Controller
     public function store(TeamStoreRequest $request): JsonResponse{
         try{
             \DB::beginTransaction();
-            $adminRoleId = Role::where('name', RoleList::Owner->value)->first('id')->id;
+            $adminRoleId = Role::where('name', RoleList::Owner)->first('id')->id;
             $team = Team::create([
                 'name' => $request->name,
                 'description' => $request->description ?? null,
@@ -48,6 +48,7 @@ class TeamController extends Controller
     }
 
     public function show(Request $request, Team $team): JsonResponse{
+        Gate::authorize('viewTeam', [Team::class, $team]);
         return $this->sendApiResponse(new TeamResource($team), 'Team retrieved successfully');
     }
 

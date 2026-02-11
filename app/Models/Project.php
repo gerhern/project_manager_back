@@ -65,11 +65,11 @@ class Project extends Model
         return $this->disputes()->where('status', DisputeStatus::Open)->exists();
     }
 
-    public function members()
-    {
-        return $this->morphToMany(User::class, 'model', 'memberships')
-            ->using(Membership::class)
-            ->withPivot('role_id');
+    //Accessors
+    public function getRoleNameAttribute(){
+        $membership = $this->users()
+            ->where('user_id', auth()->id())->first();
+        return $membership ? $membership->pivot->role->name : null;
     }
 
     //Scopes

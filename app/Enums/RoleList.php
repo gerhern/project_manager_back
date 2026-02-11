@@ -11,7 +11,7 @@ enum RoleList: string
     case User = 'User';
     case Viewer = 'Viewer';
 
-    public function teamRoles(): array {
+    public static function teamRoles(): array {
         return [
             self::Owner,
             self::Admin,
@@ -19,11 +19,24 @@ enum RoleList: string
         ];
     }
 
-    public function projectRoles(): array {
+    public static function teamManagementTier(): array {
+        return [
+            self::Owner,
+            self::Admin
+        ];
+    }
+
+    public static function projectRoles(): array {
         return [
             self::Manager,
             self::User,
             self::Viewer
+        ];
+    }
+
+     public static function projectManagementTier(): array {
+        return [
+            self::Manager,
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\RoleList;
 use App\Models\Membership;
 use App\Models\Team;
 use App\Models\User;
@@ -11,6 +12,17 @@ use Illuminate\Auth\Access\Response;
 class TeamPolicy
 {
 
+    public function viewTeam(User $user, Team $team): Response {
+        $hasRole = Membership::where('user_id', $user->id)
+        ->where('model_id', $team->id)
+        ->where('model_type', Team::class)
+        ->whereHas('role', function($q) {
+            $q->whereIn('name', RoleList::teamRoles());
+        })
+        ->exists();
+
+        return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, TPST');
+    }
     /**
      * User has permission to update team?
      * @param User $user
@@ -22,7 +34,7 @@ class TeamPolicy
         ->where('model_id', $team->id)
         ->where('model_type', Team::class)
         ->whereHas('role', function($q) {
-            $q->whereIn('name', ['Admin', 'Owner']);
+            $q->whereIn('name', RoleList::teamManagementTier());
         })
         ->exists();
 
@@ -42,7 +54,7 @@ class TeamPolicy
             ->where('model_id', $team->id)
             ->where('model_type', Team::class)
             ->whereHas('role', function($q) {
-                $q->whereIn('name', ['Admin', 'Owner']);
+                $q->whereIn('name', [RoleList::Owner]);
             })
             ->exists();
 
@@ -62,7 +74,7 @@ class TeamPolicy
         ->where('model_id', $team->id)
         ->where('model_type', Team::class)
         ->whereHas('role', function($q) {
-            $q->whereIn('name', ['Admin', 'Owner']);
+            $q->whereIn('name', RoleList::teamManagementTier());
         })
         ->exists();
 

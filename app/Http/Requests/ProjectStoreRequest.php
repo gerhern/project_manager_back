@@ -32,7 +32,7 @@ class ProjectStoreRequest extends FormRequest
         return [
             'name' => 'string|max:255|min:3|required|unique:projects,name',
             'description' => 'nullable|string|max:1000',
-            'team_id' => 'required|exists:teams,id'
+            // 'team_id' => 'required|exists:teams,id'
         ];
     }
 }

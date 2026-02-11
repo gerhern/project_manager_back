@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
+        $middleware->validateCsrfTokens(except: ['*']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
 
@@ -54,6 +55,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'code'    => 'APPE'
         ], 404);
     });
+
+    $exceptions->shouldRenderJsonWhen(function ($request, $e) {
+            return true; 
+        });
 
     $exceptions->render(function (Throwable $e, $request) {
         if ($request->is('api/*')) {

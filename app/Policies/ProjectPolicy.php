@@ -2,7 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\{Membership, User, Project};
+use App\Enums\RoleList;
+use App\Models\{Membership, User, Project, Team};
 use Illuminate\Auth\Access\Response;
 use Spatie\Permission\Models\Role;
 
@@ -14,7 +15,7 @@ class ProjectPolicy
      * @param Project $project
      * @return Response
      */
-    public function viewProject(User $user, Project $project)
+    public function viewProject(User $user, Team $team, Project $project)
     {
 
         //Owner can see their own project
@@ -28,12 +29,12 @@ class ProjectPolicy
         }
 
         //Team admin can see project
-        $roleId = Role::where('name', 'Admin')->first()->id;
-        $isTeamAdmin = $project
-            ->team
+        $roleId = Role::whereIn('name', RoleList::teamManagementTier())->get();
+
+        $isTeamAdmin = $team
             ->members()
             ->where('user_id', $user->id)
-            ->wherePivot('role_id', $roleId)
+            ->wherePivotIn('role_id', $roleId)
             ->exists();
 
         if ($isTeamAdmin) {

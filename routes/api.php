@@ -17,18 +17,20 @@ Route::middleware('auth:sanctum')->group(function(){
     ->name('logout');
 
     //Projects
-    Route::get('/projects/index', [ProjectController::class, 'index'])
+    Route::get('/projects', [ProjectController::class, 'index'])
         ->name('projects.index');
 
-    Route::post('/projects/store', [ProjectController::class, 'store'])
+    Route::post('/teams/{team}/projects', [ProjectController::class, 'store'])
         ->middleware(EnsureHierarchyIsPermitted::class)
+        ->scopeBindings()
         ->name('projects.store');
 
     Route::match(['PUT', 'PATCH'], '/projects/{project}', [ProjectController::class, 'update'])
         ->middleware(EnsureHierarchyIsPermitted::class)
         ->name('projects.update');
 
-    Route::get('/projects/show/{project}', [ProjectController::class, 'show'])
+    Route::get('/teams/{team}/projects/{project}', [ProjectController::class, 'show'])
+        ->scopeBindings()
         ->name('project.show');
 
     Route::delete('/projects/cancel/{project}', [ProjectController::class, 'cancel'])
