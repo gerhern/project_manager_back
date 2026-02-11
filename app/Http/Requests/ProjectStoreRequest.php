@@ -13,11 +13,11 @@ class ProjectStoreRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        $team = Team::find($this->team_id);
+        // $team = Team::find($this->team_id);
 
-        if(!$team){
-            return false;
-        }
+        // if(!$team){
+        //     return false;
+        // }
 
         return true;
     }

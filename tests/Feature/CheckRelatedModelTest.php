@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\Project;
+use App\Enums\RoleList;
 use App\Models\Task;
 use App\Models\Team;
 use App\Models\User;
@@ -10,7 +10,6 @@ use App\Models\Objective;
 use App\Traits\SetTestingData;
 use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class CheckRelatedModelTest extends TestCase
@@ -22,10 +21,10 @@ class CheckRelatedModelTest extends TestCase
         $this->seed(RolesSeeder::class);
 
         [$user, $team, $project] = $this->createProject();
-        $projectRole = $this->getRole('Viewer');
+        $projectRole = $this->getRole(RoleList::Viewer->value);
 
-        $this->addUserToProject($project, $user, 'Viewer');
-        $this->addUserToTeam($team, $user, 'Member');
+        $this->addUserToProject($project, $user, RoleList::Viewer->value);
+        $this->addUserToTeam($team, $user, RoleList::Member->value);
 
         $user->load('projects');
         $projects = $user->projects;
@@ -40,9 +39,9 @@ class CheckRelatedModelTest extends TestCase
     {
         $this->seed(RolesSeeder::class);
         [$user, $team, $project] =$this->createProject();
-        $role = $this->getRole('Admin');
+        $role = $this->getRole(RoleList::Admin->value);
 
-        $this->addUserToTeam($team, $user, 'Admin');
+        $this->addUserToTeam($team, $user, RoleList::Admin->value);
         $this->addUserToProject($project, $user);
 
         $user->unsetRelation('teams');
@@ -59,10 +58,10 @@ class CheckRelatedModelTest extends TestCase
         $users = User::factory()->count(2)->create();
 
         [,, $project] = $this->createProject();
-        $role = $this->getRole('User');
+        $role = $this->getRole(RoleList::User->value);
 
         foreach ($users as $user) {
-            $this->addUserToProject($project, $user, 'User');
+            $this->addUserToProject($project, $user, RoleList::User->value);
         }
 
         $this->assertCount(2, $project->users);

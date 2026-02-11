@@ -46,13 +46,11 @@ class AuthTest extends TestCase
         $user = User::factory()->create();
         $token = $user->createToken('test-token')->plainTextToken;
 
-        // Actuamos como el usuario usando el token generado
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
             ->postJson(route('logout'));
 
         $response->assertOk();
         
-        // Verificamos que el token fue eliminado de la DB
         $this->assertCount(0, $user->fresh()->tokens);
     }
 

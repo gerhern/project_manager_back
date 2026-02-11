@@ -6,6 +6,7 @@ use App\Enums\DisputeStatus;
 use App\Enums\ProjectStatus;
 use App\Http\Requests\ProjectStoreRequest;
 use App\Http\Requests\ProjectUpdateRequest;
+use App\Http\Resources\ProjectResource;
 use App\Models\Team;
 use App\Notifications\DisputeStartNotification;
 use App\Traits\ApiResponse;
@@ -29,7 +30,7 @@ class ProjectController extends Controller
     public function index(Request $request): JsonResponse
     {
         $projects = $request->user()->projects()->withPivot('role_id')->get();
-        return $this->sendApiResponse($projects, 'Projects retrieved successfully');
+        return $this->sendApiResponse(ProjectResource::collection($projects), 'Projects retrieved successfully');
     }
 
     /**

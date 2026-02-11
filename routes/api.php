@@ -97,17 +97,17 @@ Route::middleware('auth:sanctum')->group(function(){
     Route::get('/teams', [TeamController::class, 'index'])
         ->name('teams.index');
 
-    Route::post('/teams/create', [TeamController::class, 'store'])
+    Route::post('/teams', [TeamController::class, 'store'])
         ->name('teams.store');
 
     Route::get('/teams/{team}', [TeamController::class, 'show'])
         ->name('teams.show');
 
-    Route::match(['PUT', 'PATCH'], '/teams/{team}/update', [TeamController::class, 'update'])
+    Route::match(['PUT', 'PATCH'], '/teams/{team}', [TeamController::class, 'update'])
         ->middleware(EnsureHierarchyIsPermitted::class)
         ->name('teams.update');
 
-    Route::delete('teams/inactive/{team}', [TeamController::class, 'inactiveTeam'])
+    Route::delete('teams/{team}', [TeamController::class, 'destroy'])
         ->middleware(EnsureHierarchyIsPermitted::class)
         ->name('teams.inactive');
 });

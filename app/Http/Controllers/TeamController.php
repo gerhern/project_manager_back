@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\RoleList;
 use App\Enums\TeamStatus;
 use App\Http\Requests\TeamStoreRequest;
 use App\Http\Requests\TeamUpdateRequest;
@@ -24,7 +25,7 @@ class TeamController extends Controller
     public function store(TeamStoreRequest $request): JsonResponse{
         try{
             \DB::beginTransaction();
-            $adminRoleId = Role::where('name', 'Admin')->first('id')->id;
+            $adminRoleId = Role::where('name', RoleList::Owner->value)->first('id')->id;
             $team = Team::create([
                 'name' => $request->name,
                 'description' => $request->description ?? null,
@@ -58,7 +59,7 @@ class TeamController extends Controller
         return $this->sendApiResponse(new TeamResource($team), 'Team updated successfully.', 200);
     }
 
-    public function inactiveTeam(Request $request, Team $team): JsonResponse {
+    public function destroy(Request $request, Team $team): JsonResponse {
         Gate::authorize('inactiveTeam', [Team::class, $team]);
 
         $team->update(['status' => TeamStatus::Inactive->name]);

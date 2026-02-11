@@ -2,12 +2,12 @@
 
 namespace App\Enums;
 
-enum ProjectStatus
+enum ProjectStatus: string
 {
-    case Active;
-    case CancelInProgress;
-    case Canceled;
-    case Completed;
+    case Active = 'Active';
+    case CancelInProgress = 'CancelInProgress';
+    case Canceled = 'Canceled';
+    case Completed = 'Completed';
 
     public function code(): string
     {

@@ -2,10 +2,10 @@
 
 namespace App\Enums;
 
-enum TeamStatus
+enum TeamStatus: string
 {
-    case Active;
-    case Inactive;
+    case Active = 'Active';
+    case Inactive = 'Inactive';
 
     public function code(): string {
         return match ($this) {

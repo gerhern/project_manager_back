@@ -28,4 +28,10 @@ class Team extends Model
             ->withPivot('role_id')
             ->withTimestamps();
     }
+
+    public function getRoleNameAttribute(){
+        $membership = $this->members()
+            ->where('user_id', auth()->id())->first();
+        return $membership ? $membership->pivot->role->name : null;
+    }
 }
