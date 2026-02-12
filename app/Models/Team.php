@@ -34,4 +34,8 @@ class Team extends Model
             ->where('user_id', auth()->id())->first();
         return $membership ? $membership->pivot->role->name : null;
     }
+
+    public function projects(){
+        return $this->hasMany(Project::class, 'team_id');
+    }
 }

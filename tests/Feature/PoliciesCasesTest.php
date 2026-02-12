@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\RoleList;
 use App\enums\TaskStatus;
 use App\Traits\SetTestingData;
 use Carbon\Carbon;
@@ -40,11 +41,11 @@ class PoliciesCasesTest extends TestCase
         $employee = User::factory()->create();
         $manager = User::factory()->create();
 
-        [,, $project, $objective] = $this->createObjective([], $employee);
+        [, $team, $project, $objective] = $this->createObjective([], $employee);
         
-        $this->addUserToProject($project, $viewer, 'Viewer');
-        $this->addUserToProject($project, $employee, 'User');
-        $this->addUserToProject($project, $manager, 'Manager');
+        $this->addUserToProject($project, $viewer, RoleList::Viewer->value);
+        $this->addUserToProject($project, $employee, RoleList::User->value);
+        $this->addUserToProject($project, $manager, RoleList::Manager->value);
 
         $task = Task::factory()->create(['objective_id' => $objective->id]);
 
@@ -60,7 +61,7 @@ class PoliciesCasesTest extends TestCase
             ->assertStatus(403)
             ->assertJsonStructure(['success', 'message']);
 
-            $this->putJson(route('projects.update', $project), ['name' => 'new name'])
+            $this->putJson(route('projects.update', [$team, $project]), ['name' => 'new name'])
             ->assertStatus(403)
             ->assertJsonStructure(['success', 'message']);
 

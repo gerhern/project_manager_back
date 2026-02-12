@@ -150,7 +150,7 @@ class ObjectiveControllerTest extends TestCase
 
         $this->actingAs($stranger)
             ->getJson(route('projects.objectives.show', [$project, $objective]))
-            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, PPVP']);
+            ->assertJson(['success' => false, 'message' => 'This action is unauthorized, OPVO']);
     }
 
     public function test_cannot_access_objective_from_another_project(): void {

@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Enums\{ProjectStatus, ObjectiveStatus, TaskStatus, TeamStatus};
+use App\Enums\{ProjectStatus, ObjectiveStatus, RoleList, TaskStatus, TeamStatus};
 use App\Models\{Project, Task, Objective, Team, User};
 use App\Traits\SetTestingData;
 use Carbon\Carbon;
@@ -42,6 +42,7 @@ class MiddlewareCasesTest extends TestCase
         };
 
         $routeParams = match($modelClass) {
+            Project::class   => [$resource->team, $resource],
             Objective::class => [$resource->project, $resource],
             Task::class      => [$resource->objective->project, $resource->objective, $resource],
             default          => [$resource],
@@ -130,32 +131,31 @@ class MiddlewareCasesTest extends TestCase
         $this->seed('RolesSeeder');
 
         [$user, $team, $project] = $this->createProject();
-        $user->assignRole('User');
-        $admin = User::factory()->create()->assignRole('Admin');
-        $stranger = User::factory()->create()->assignRole('User');
-        $member = User::factory()->create()->assignRole('Member');
+        $admin = User::factory()->create();
+        $stranger = User::factory()->create();
+        $member = User::factory()->create();
 
-        $this->addUserToProject($project, $user, 'User');
-        $this->addUserToTeam($team, $admin, 'Admin');
-        $this->addUserToTeam($team, $member, 'Member');
+        $this->addUserToProject($project, $user, RoleList::User->value);
+        $this->addUserToTeam($team, $admin, RoleList::Admin->value);
+        $this->addUserToTeam($team, $member, RoleList::Member->value);
 
         $this->actingAs($user)
-            ->getJson(route('project.show', $project))
+            ->getJson(route('project.show', [$team, $project]))
             ->assertJsonStructure(['success', 'message'])
             ->assertStatus(200  );
 
         $this->actingAs($admin)
-            ->getJson(route('project.show', $project))
+            ->getJson(route('project.show', [$team, $project]))
             ->assertJsonStructure(['success', 'message'])
             ->assertStatus(200  );
 
         $this->actingAs($member)
-            ->getJson(route('project.show', $project))
+            ->getJson(route('project.show', [$team, $project]))
             ->assertJsonStructure(['success', 'message'])
             ->assertStatus(403);
 
         $this->actingAs($stranger)
-            ->getJson(route('project.show', $project))
+            ->getJson(route('project.show', [$team, $project]))
             ->assertJsonStructure(['success', 'message'])
             ->assertStatus(403);
     }

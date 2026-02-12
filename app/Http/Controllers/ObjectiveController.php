@@ -17,7 +17,7 @@ class ObjectiveController extends Controller
     use ApiResponse;
 
     public function index(Request $request, Project $project): JsonResponse {
-        Gate::authorize('viewProject', $project);
+        // Gate::authorize('viewObjective', $project);
 
         $objectives = $project->objectives()
             ->withCount('tasks')
@@ -46,7 +46,7 @@ class ObjectiveController extends Controller
     }
 
     public function show(Request $request, Project $project, Objective $objective): JsonResponse{
-        Gate::authorize('viewProject', $project);
+        Gate::authorize('viewObjective', [Objective::class, $project, $objective]);
         $objective->load('tasks');
         return $this->sendApiResponse($objective,'Objective retrieved successfully');
     }

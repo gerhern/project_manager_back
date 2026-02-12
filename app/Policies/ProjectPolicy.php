@@ -17,7 +17,7 @@ class ProjectPolicy
      */
     public function viewProject(User $user, Team $team, Project $project)
     {
-
+// dd(RoleList::teamManagementTier());
         //Owner can see their own project
         if ($user->id === $project->user_id) {
             return Response::allow();
@@ -29,15 +29,15 @@ class ProjectPolicy
         }
 
         //Team admin can see project
-        $roleId = Role::whereIn('name', RoleList::teamManagementTier())->get();
+        $hasRoles = Membership::where('user_id', $user->id)
+        ->where('model_id', $team->id)
+        ->where('model_type', Team::class)
+        ->whereHas('role', function($q) {
+            $q->whereIn('name', RoleList::teamManagementTier());
+        })
+        ->exists();
 
-        $isTeamAdmin = $team
-            ->members()
-            ->where('user_id', $user->id)
-            ->wherePivotIn('role_id', $roleId)
-            ->exists();
-
-        if ($isTeamAdmin) {
+        if ($hasRoles) {
             return Response::allow();
         }
 
@@ -50,12 +50,12 @@ class ProjectPolicy
      * @param Project $project
      * @return Response
      */
-    public function updateProject(User $user, Project $project): Response
+    public function updateProject(User $user, Team $team,  Project $project): Response
     {
         if ($user->id === $project->user_id) {
             return Response::allow();
         }
-        $hasRole = $user->hasProjectRole($project, 'Manager');
+        $hasRole = $user->hasProjectRole($project, RoleList::Manager);
 
         return $hasRole ? Response::allow() : Response::deny("This action is unauthorized, PPUP", 403);
     }

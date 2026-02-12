@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\DisputeStatus;
 use App\Enums\ProjectStatus;
+use App\Enums\RoleList;
 use App\Http\Controllers\ProjectController;
 use App\Models\Project;
 use App\Models\ProjectDispute;
@@ -94,24 +95,24 @@ class ProjectControllerTest extends TestCase
     public function test_only_valid_users_can_update_project(): void {
         $this->seed(RolesSeeder::class);
 
-        [$owner,, $project] = $this->createProject();
+        [$owner, $team, $project] = $this->createProject();
         $user = User::factory()->create();
         $viewer = User::factory()->create();
 
         $this->addUserToProject($project, $owner);
-        $this->addUserToProject($project, $user, 'User');
-        $this->addUserToProject($project, $viewer, 'Viewer');
+        $this->addUserToProject($project, $user, RoleList::User->value);
+        $this->addUserToProject($project, $viewer, RoleList::Viewer->value);
 
         $this->actingAs($viewer)
-            ->putJson(route('projects.update', $project), ['name' => 'viewer name'])
+            ->putJson(route('projects.update', [$team, $project]), ['name' => 'viewer name'])
             ->assertJson(['success' => false, 'message' => 'This action is unauthorized, PPUP']);
         
         $this->actingAs($user)
-            ->putJson(route('projects.update', $project), ['name' => 'user name'])
+            ->putJson(route('projects.update', [$team, $project]), ['name' => 'user name'])
             ->assertJson(['success' => false, 'message' => 'This action is unauthorized, PPUP']);
         
         $this->actingAs($owner)
-            ->putJson(route('projects.update', $project), ['name' => 'owner name'])
+            ->putJson(route('projects.update', [$team, $project]), ['name' => 'owner name'])
             ->assertJson(['success' => true, 'message' => 'Project updated successfully'])
             ->assertJsonStructure(['success', 'data', 'message']);
         
@@ -131,32 +132,32 @@ class ProjectControllerTest extends TestCase
         $manager = User::factory()->create();
         $this->addUserToProject($project, $manager);
         $user = User::factory()->create();
-        $this->addUserToProject($project, $user, 'User');
+        $this->addUserToProject($project, $user, RoleList::User->value);
         $viewer = User::factory()->create();
-        $this->addUserToProject($project, $viewer, 'Viewer');
+        $this->addUserToProject($project, $viewer, RoleList::Viewer->value);
 
         $this->actingAs($viewer)
-            ->deleteJson(route('projects.cancel', $project))
+            ->deleteJson(route('projects.cancel', [$team, $project]))
             ->assertJson(['success' => false, 'message' => 'This action is unauthorized, PPCP']);
 
         $this->actingAs($user)
-            ->deleteJson(route('projects.cancel', $project))
+            ->deleteJson(route('projects.cancel', [$team, $project]))
             ->assertJson(['success' => false, 'message' => 'This action is unauthorized, PPCP']);
         
         $this->actingAs($manager)
-            ->deleteJson(route('projects.cancel', $project))
+            ->deleteJson(route('projects.cancel', [$team, $project]))
             ->assertJson(['success' => true, 'message' => 'An open dispute has been created'])
             ->assertStatus(200);
         
-        $this->assertDatabaseHas('project_disputes', ['user_id' => $manager->id, 'status' => DisputeStatus::Open->name]);
-        $this->assertDatabaseHas('projects', ['status' => ProjectStatus::CancelInProgress->name]);
+        $this->assertDatabaseHas('project_disputes', ['user_id' => $manager->id, 'status' => DisputeStatus::Open]);
+        $this->assertDatabaseHas('projects', ['status' => ProjectStatus::CancelInProgress]);
 
         $this->actingAs($owner)
-            ->deleteJson(route('projects.cancel', $projectB))
+            ->deleteJson(route('projects.cancel', [$team, $projectB]))
             ->assertJson(['success' => true, 'message' => 'The project has been canceled successfully'])
             ->assertStatus(200);
 
-        $this->assertDatabaseHas('projects', ['status' => ProjectStatus::Canceled->name]);
+        $this->assertDatabaseHas('projects', ['status' => ProjectStatus::Canceled]);
     }
 
     public function test_owner_update_dispute_project_status(): void {
@@ -209,30 +210,24 @@ class ProjectControllerTest extends TestCase
     public function test_owner_is_notified_when_dispute_is_created(): void
     {
         $this->seed(RolesSeeder::class);
-        // 1. Arrange: Inicializamos el Fake y preparamos datos
         Notification::fake();
         
         [$owner, $team, $project] = $this->createProject();
         $stranger = User::factory()->create();
 
-        $this->addUserToProject($project, $stranger, 'Manager');
-
-        // 2. Act: Realizamos la acción que dispara la notificación (vía API)
+        $this->addUserToProject($project, $stranger, RoleList::Manager->value);
+        
         $this->actingAs($stranger)
-            ->deleteJson(route('projects.cancel', $project))
+            ->deleteJson(route('projects.cancel', [$team, $project]))
             ->assertOk();
 
-        // 3. Assert: Verificamos que se envió la notificación al dueño
         Notification::assertSentTo(
             $owner, 
             DisputeStartNotification::class,
             function ($notification, $channels) use ($project) {
-                // Verificamos que contenga el proyecto correcto
                 return $notification->project->id === $project->id;
             }
         );
-
-        // Verificamos que NO se envió a otros usuarios (importante para evitar spam)
         Notification::assertNotSentTo($stranger, DisputeStartNotification::class);
     }
 

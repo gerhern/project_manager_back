@@ -25,15 +25,16 @@ Route::middleware('auth:sanctum')->group(function(){
         ->scopeBindings()
         ->name('projects.store');
 
-    Route::match(['PUT', 'PATCH'], '/projects/{project}', [ProjectController::class, 'update'])
+    Route::match(['PUT', 'PATCH'], '/teams/{team}/projects/{project}', [ProjectController::class, 'update'])
         ->middleware(EnsureHierarchyIsPermitted::class)
+        ->scopeBindings()
         ->name('projects.update');
 
     Route::get('/teams/{team}/projects/{project}', [ProjectController::class, 'show'])
         ->scopeBindings()
         ->name('project.show');
 
-    Route::delete('/projects/cancel/{project}', [ProjectController::class, 'cancel'])
+    Route::delete('teams/{team}/projects/{project}', [ProjectController::class, 'destroy'])
         ->middleware(EnsureHierarchyIsPermitted::class)
         ->name('projects.cancel');
 

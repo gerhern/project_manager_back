@@ -2,19 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\DisputeStatus;
-use App\Enums\ProjectStatus;
-use App\Enums\RoleList;
+use App\Enums\{DisputeStatus, ProjectStatus, RoleList};
 use App\Http\Requests\ProjectStoreRequest;
 use App\Http\Requests\ProjectUpdateRequest;
 use App\Http\Resources\ProjectResource;
-use App\Models\Team;
 use App\Notifications\DisputeStartNotification;
 use App\Traits\ApiResponse;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use App\Models\{Project, ProjectDispute};
+use App\Models\{Project, ProjectDispute, Team};
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
@@ -68,11 +65,11 @@ class ProjectController extends Controller
         }
 
     }
-    public function update(ProjectUpdateRequest $request, Project $project): JsonResponse
+    public function update(ProjectUpdateRequest $request, Team $team, Project $project): JsonResponse
     {
-        Gate::authorize('updateProject', $project);
+        Gate::authorize('updateProject', [Project::class, $team, $project]);
             $project->update($request->validated());
-            return $this->sendApiResponse($project, 'Project updated successfully', 200);
+            return $this->sendApiResponse(new ProjectResource($project), 'Project updated successfully', 200);
     }
 
     public function resolveDispute(Request $request, ProjectDispute $dispute): JsonResponse
@@ -110,18 +107,18 @@ class ProjectController extends Controller
     public function show(Request $request,Team $team, Project $project): JsonResponse
     {
         Gate::authorize('viewProject', [Project::class, $team, $project]);
-        return $this->sendApiResponse($project, 'Project retrieved successfully');
+        return $this->sendApiResponse(new ProjectResource($project), 'Project retrieved successfully');
     }
 
-    public function cancel(Request $request, Project $project): JsonResponse {
+    public function destroy(Request $request, Team $team, Project $project): JsonResponse {
         Gate::authorize('cancelProject', $project);
 
         if($request->user()->id === $project->user_id){
             $project->update([
-                'status' => ProjectStatus::Canceled->name
+                'status' => ProjectStatus::Canceled
             ]);
 
-            return $this->sendApiResponse($project, 'The project has been canceled successfully');
+            return $this->sendApiResponse(new ProjectResource($project), 'The project has been canceled successfully');
         }
 
         try{
@@ -130,17 +127,17 @@ class ProjectController extends Controller
             'project_id'    => $project->id,
             'user_id'       => $request->user()->id,
             'expired_at'    => Carbon::now()->addDays(15),
-            'status'        => DisputeStatus::Open->name
+            'status'        => DisputeStatus::Open
             ]);
 
             $project->update([
-                    'status' => ProjectStatus::CancelInProgress->name
+                    'status' => ProjectStatus::CancelInProgress
                 ]);
             \DB::commit();
 
             $project->creator->notify(new DisputeStartNotification($project));
 
-            return $this->sendApiResponse($project, 'An open dispute has been created');
+            return $this->sendApiResponse(new ProjectResource($project), 'An open dispute has been created');
         }catch(\Exception $e){
             \DB::rollBack();
             \Log::error('Error trying to cancel project: '.$e->getMessage());
