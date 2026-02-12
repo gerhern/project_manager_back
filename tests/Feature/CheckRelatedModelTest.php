@@ -23,8 +23,8 @@ class CheckRelatedModelTest extends TestCase
         [$user, $team, $project] = $this->createProject();
         $projectRole = $this->getRole(RoleList::Viewer->value);
 
-        $this->addUserToProject($project, $user, RoleList::Viewer->value);
-        $this->addUserToTeam($team, $user, RoleList::Member->value);
+        $this->addUserToProject($project, $user, RoleList::Viewer);
+        $this->addUserToTeam($team, $user, RoleList::Member);
 
         $user->load('projects');
         $projects = $user->projects;
@@ -41,7 +41,7 @@ class CheckRelatedModelTest extends TestCase
         [$user, $team, $project] =$this->createProject();
         $role = $this->getRole(RoleList::Admin->value);
 
-        $this->addUserToTeam($team, $user, RoleList::Admin->value);
+        $this->addUserToTeam($team, $user, RoleList::Admin);
         $this->addUserToProject($project, $user);
 
         $user->unsetRelation('teams');
@@ -61,7 +61,7 @@ class CheckRelatedModelTest extends TestCase
         $role = $this->getRole(RoleList::User->value);
 
         foreach ($users as $user) {
-            $this->addUserToProject($project, $user, RoleList::User->value);
+            $this->addUserToProject($project, $user, RoleList::User);
         }
 
         $this->assertCount(2, $project->users);

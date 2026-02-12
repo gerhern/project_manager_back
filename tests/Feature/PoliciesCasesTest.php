@@ -43,9 +43,9 @@ class PoliciesCasesTest extends TestCase
 
         [, $team, $project, $objective] = $this->createObjective([], $employee);
         
-        $this->addUserToProject($project, $viewer, RoleList::Viewer->value);
-        $this->addUserToProject($project, $employee, RoleList::User->value);
-        $this->addUserToProject($project, $manager, RoleList::Manager->value);
+        $this->addUserToProject($project, $viewer, RoleList::Viewer);
+        $this->addUserToProject($project, $employee, RoleList::User);
+        $this->addUserToProject($project, $manager, RoleList::Manager);
 
         $task = Task::factory()->create(['objective_id' => $objective->id]);
 

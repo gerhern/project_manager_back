@@ -18,7 +18,7 @@ class TaskResource extends JsonResource
             'id'          => $this->id,
             'title'       => $this->title,
             'description' => $this->description,
-            'due_date'    => $this->due_date?->format('Y-m-d'),
+            'due_date'    => $this->due_date,
             'status'      => $this->status,
             'objective'   => new  ObjectiveResource($this->whenLoaded('objective'))
         ];

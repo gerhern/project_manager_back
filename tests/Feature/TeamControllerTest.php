@@ -29,8 +29,8 @@ class TeamControllerTest extends TestCase
         Team::factory()->create();
         $user = User::factory()->create();
 
-        $this->addUserToTeam($teamAdmin, $user, 'Admin');
-        $this->addUserToTeam($teamMember, $user, 'Member');
+        $this->addUserToTeam($teamAdmin, $user, RoleList::Admin);
+        $this->addUserToTeam($teamMember, $user, RoleList::Member);
 
         $response = $this->actingAs($user)
             ->getJson(route('teams.index'))
@@ -84,7 +84,7 @@ class TeamControllerTest extends TestCase
     {
         [$adminUser, $team] = $this->createTeam(['name' => 'first name']);
 
-        $this->addUserToTeam($team, $adminUser, 'Admin');
+        $this->addUserToTeam($team, $adminUser, RoleList::Admin);
 
         $this->actingAs($adminUser)
             ->putJson(route('teams.update', $team), ['name' => 'new name'])
@@ -97,7 +97,7 @@ class TeamControllerTest extends TestCase
     public function test_invalid_user_can_not_update_team():void {
         [$otherUser, $team] = $this->createTeam(['name' => 'first name']);
 
-        $this->addUserToTeam($team, $otherUser, 'Member');
+        $this->addUserToTeam($team, $otherUser, RoleList::Member);
 
         $this->actingAs($otherUser)
             ->putJson(route('teams.update', $team), ['name' => 'third name'])
@@ -110,7 +110,7 @@ class TeamControllerTest extends TestCase
     public function test_only_owner_can_update_status(): void {
         [$owner, $team] = $this->createTeam();
         $stranger = User::factory()->create();
-        $this->addUserToTeam($team, $owner, RoleList::Owner->value);
+        $this->addUserToTeam($team, $owner, RoleList::Owner);
 
         $this->actingAs($stranger)
             ->deleteJson(route('teams.inactive', $team))

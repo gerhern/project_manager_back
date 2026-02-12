@@ -61,7 +61,7 @@ Route::middleware('auth:sanctum')->group(function(){
         ->scopeBindings();
 
     //Tasks
-    Route::get('projects/{project}/objectives/{objective}/tasks', [TaskController::class, 'index'])
+    Route::get('objectives/{objective}/tasks', [TaskController::class, 'index'])
         ->name('projects.objectives.tasks.index')
         ->scopeBindings();
 

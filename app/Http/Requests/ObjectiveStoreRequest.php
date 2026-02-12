@@ -35,7 +35,7 @@ class ObjectiveStoreRequest extends FormRequest
             'title'       => 'required|string|min:3|max:255',
             'description' => 'nullable|string|min:3|max:1000',
             'status'      => 'prohibited',
-            'priority'    => ['string', new Enum(ObjectivePriority::class)]
+            'priority'    => ['string', 'nullable', new Enum(ObjectivePriority::class)]
         ];
     }
 }

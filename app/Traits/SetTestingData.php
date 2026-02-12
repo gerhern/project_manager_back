@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use App\Enums\DisputeStatus;
 use App\Enums\ProjectStatus;
+use App\Enums\RoleList;
 use App\Enums\TeamStatus;
 use App\Models\Objective;
 use App\Models\Project;
@@ -20,12 +21,12 @@ trait SetTestingData
 
     protected static array $testingRoles = [];
 
-    protected function getCachedRoleId(string $name): int
+    protected function getCachedRoleId(RoleList $name): int
     {
-        if (!isset(self::$testingRoles[$name])) {
-            self::$testingRoles[$name] = Role::where('name', $name)->firstOrFail()->id;
+        if (!isset(self::$testingRoles[$name->value])) {
+            self::$testingRoles[$name->value] = Role::where('name', $name)->firstOrFail()->id;
         }
-        return self::$testingRoles[$name];
+        return self::$testingRoles[$name->value];
     }
 
     public function setRoles(... $roleList): void{
@@ -34,11 +35,6 @@ trait SetTestingData
             Role::create(['name' => $roleName]);
         }
     }
-
-    public function createUserWithRole(string $role): User{
-        return User::factory()->create()->assignRole($role);
-    }
-
 
     /**
      * Create objects Project, Team and User, assign created user as a owner of project and assign project on projects list's team
@@ -62,7 +58,7 @@ trait SetTestingData
         return [$user, $team, $project];
     }
 
-    public function addUserToProject(Project $project, User $user, string $roleName = 'Manager'): void
+    public function addUserToProject(Project $project, User $user, RoleList $roleName = RoleList::Manager): void
     {
         $user->projects()->attach($project->id, ['role_id' => $this->getCachedRoleId($roleName)]);
     }
@@ -74,7 +70,7 @@ trait SetTestingData
      * @param string $roleName The user will be added to the team with this role (Role must exists)
      * @return void
      */
-    public function addUserToTeam(Team $team, User $user, string $roleName = 'Admin'): void
+    public function addUserToTeam(Team $team, User $user, RoleList $roleName = RoleList::Admin): void
     {
         $user->teams()->attach($team->id, ['role_id' => $this->getCachedRoleId($roleName)]);
     }

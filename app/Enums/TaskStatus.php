@@ -2,13 +2,13 @@
 
 namespace App\enums;
 
-enum TaskStatus
+enum TaskStatus: string
 {
-    case Pending;
-    case Assigned;
-    case InProgress;
-    case Completed;
-    case Canceled;
+    case Pending = 'Pending';
+    case Assigned = 'Assigned';
+    case InProgress = 'InProgress';
+    case Completed = 'Completed';
+    case Canceled = 'Canceled';
 
     public function code(): string
     {

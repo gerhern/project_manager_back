@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\RoleList;
 use App\enums\TaskStatus;
 use App\Models\User;
 use App\Traits\SetTestingData;
@@ -25,7 +26,7 @@ class TaskControllerTest extends TestCase
         $user = User::factory()->create();
         $stranger = User::factory()->create();
 
-        $this->addUserToProject($project, $user, 'User');
+        $this->addUserToProject($project, $user, RoleList::User);
 
         $this->actingAs($stranger)
             ->getJson(route('projects.objectives.tasks.index',[$project, $objective]))
@@ -57,7 +58,7 @@ class TaskControllerTest extends TestCase
         $user = User::factory()->create();
         $stranger = User::factory()->create();
 
-        $this->addUserToProject($project, $user, 'User');
+        $this->addUserToProject($project, $user, RoleList::User);
 
         $this->actingAs($stranger)
             ->postJson(
@@ -106,7 +107,7 @@ class TaskControllerTest extends TestCase
         $stranger = User::factory()->create();
         [,,,,$taskB] = $this->createTask([], $owner, $team, $project, $objective);
         $this->addUserToProject($project, $owner);
-        $this->addUserToProject($project, $user, 'Viewer');
+        $this->addUserToProject($project, $user, RoleList::Viewer);
 
         $this->actingAs($owner)
             ->getJson(route('projects.objectives.tasks.show', [$project, $objective, $task]))
@@ -135,8 +136,8 @@ class TaskControllerTest extends TestCase
         $viewer = User::factory()->create();
         $user = User::factory()->create();
 
-        $this->addUserToProject($project, $viewer, 'Viewer');
-        $this->addUserToProject($project, $user, 'User');
+        $this->addUserToProject($project, $viewer, RoleList::Viewer);
+        $this->addUserToProject($project, $user, RoleList::User);
 
         $this->updateTaskAs(['title' => 'stranger title'], $stranger, $project, $objective, $task)
             ->assertForbidden()
@@ -170,8 +171,8 @@ class TaskControllerTest extends TestCase
         $stranger = User::factory()->create();
         $user = User::factory()->create();
 
-        $this->addUserToProject($project, $viewer, 'Viewer');
-        $this->addUserToProject($project, $user, 'User');
+        $this->addUserToProject($project, $viewer, RoleList::Viewer);
+        $this->addUserToProject($project, $user, RoleList::User);
 
         $this->actingAs($stranger)
             ->deleteJson(
@@ -220,8 +221,8 @@ class TaskControllerTest extends TestCase
         $viewer = User::factory()->create();
         $user = User::factory()->create();
         
-        $this->addUserToProject($project, $viewer, 'Viewer');
-        $this->addUserToProject($project, $user, 'User');
+        $this->addUserToProject($project, $viewer, RoleList::Viewer);
+        $this->addUserToProject($project, $user, RoleList::User);
         [,,,, $task] = $this->createTask([], $user, $team, $project, $objective);
         
         $this->actingAs($stranger)
@@ -272,8 +273,8 @@ class TaskControllerTest extends TestCase
         [$userOwner, $team, $project, $objective]  = $this->createObjective();
         $user = User::factory()->create();
 
-        $this->addUserToProject($project, $userOwner, 'User');
-        $this->addUserToProject($project, $user, 'User');
+        $this->addUserToProject($project, $userOwner, RoleList::User);
+        $this->addUserToProject($project, $user, RoleList::User);
 
         [,,,,$task] = $this->createTask([], $userOwner, $team, $project, $objective);
 

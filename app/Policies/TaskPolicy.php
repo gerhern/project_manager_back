@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\RoleList;
 use App\Models\Objective;
 use App\Models\Project;
 use App\Models\User;
@@ -12,16 +13,16 @@ use App\Models\Task;
 
 class TaskPolicy
 {
-    public function viewTasks($user, $project, $objective): Response{
-        if($objective->project_id !== $project->id){
+    public function viewTasks($user, $objective): Response{
+        if($objective->project_id !== $objective->project->id){
             return Response::deny('This action is unauthorized, TKPITK');
         }
 
-        if($user->id === $project->user_id){
+        if($user->id === $objective->project->user_id){
             return Response::allow();
         }
 
-        $hasRole = $user->hasProjectRole($project, ['Manager', 'User', 'Viewer']);
+        $hasRole = $user->hasProjectRole($objective->project, RoleList::projectRoles());
         return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, TKPITK');
     }
 

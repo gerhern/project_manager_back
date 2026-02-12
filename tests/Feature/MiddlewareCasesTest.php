@@ -135,9 +135,9 @@ class MiddlewareCasesTest extends TestCase
         $stranger = User::factory()->create();
         $member = User::factory()->create();
 
-        $this->addUserToProject($project, $user, RoleList::User->value);
-        $this->addUserToTeam($team, $admin, RoleList::Admin->value);
-        $this->addUserToTeam($team, $member, RoleList::Member->value);
+        $this->addUserToProject($project, $user, RoleList::User);
+        $this->addUserToTeam($team, $admin, RoleList::Admin);
+        $this->addUserToTeam($team, $member, RoleList::Member);
 
         $this->actingAs($user)
             ->getJson(route('project.show', [$team, $project]))

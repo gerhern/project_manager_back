@@ -30,7 +30,7 @@ class ProjectControllerTest extends TestCase
         $stranger = User::factory()->create();
 
         $this->addUserToProject($project, $owner);
-        $this->addUserToProject($project, $member, 'User');
+        $this->addUserToProject($project, $member, RoleList::User);
         $this->addUserToProject($projectB, $owner);
 
         $onwerResponse = $this->actingAs($owner)
@@ -67,7 +67,7 @@ class ProjectControllerTest extends TestCase
         $member = User::factory()->create();
 
         $this->addUserToTeam($team, $admin);
-        $this->addUserToTeam($team, $member, 'Member');
+        $this->addUserToTeam($team, $member, RoleList::Member);
 
         $this->actingAs($member)
             ->postJson(route('projects.store', [$team]), ['name' => 'memberProject', 'team_id' => $team->id])
@@ -88,7 +88,7 @@ class ProjectControllerTest extends TestCase
             'user_id' => $admin->id,
             'model_id' => $project->id,
             'model_type' => Project::class,
-            'role_id' => $this->getCachedRoleId('Manager')
+            'role_id' => $this->getCachedRoleId(RoleList::Manager)
         ]);
     }
 
@@ -100,8 +100,8 @@ class ProjectControllerTest extends TestCase
         $viewer = User::factory()->create();
 
         $this->addUserToProject($project, $owner);
-        $this->addUserToProject($project, $user, RoleList::User->value);
-        $this->addUserToProject($project, $viewer, RoleList::Viewer->value);
+        $this->addUserToProject($project, $user, RoleList::User);
+        $this->addUserToProject($project, $viewer, RoleList::Viewer);
 
         $this->actingAs($viewer)
             ->putJson(route('projects.update', [$team, $project]), ['name' => 'viewer name'])
@@ -132,9 +132,9 @@ class ProjectControllerTest extends TestCase
         $manager = User::factory()->create();
         $this->addUserToProject($project, $manager);
         $user = User::factory()->create();
-        $this->addUserToProject($project, $user, RoleList::User->value);
+        $this->addUserToProject($project, $user, RoleList::User);
         $viewer = User::factory()->create();
-        $this->addUserToProject($project, $viewer, RoleList::Viewer->value);
+        $this->addUserToProject($project, $viewer, RoleList::Viewer);
 
         $this->actingAs($viewer)
             ->deleteJson(route('projects.cancel', [$team, $project]))
@@ -215,7 +215,7 @@ class ProjectControllerTest extends TestCase
         [$owner, $team, $project] = $this->createProject();
         $stranger = User::factory()->create();
 
-        $this->addUserToProject($project, $stranger, RoleList::Manager->value);
+        $this->addUserToProject($project, $stranger, RoleList::Manager);
         
         $this->actingAs($stranger)
             ->deleteJson(route('projects.cancel', [$team, $project]))

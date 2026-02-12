@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ObjectivePriority;
 use App\Enums\ObjectiveStatus;
 use App\Http\Requests\ObjectiveStoreRequest;
 use App\Http\Requests\ObjectiveUpdateRequest;
@@ -36,7 +37,7 @@ class ObjectiveController extends Controller
                 'title'         => $request->title,
                 'description'   => $request->description,
                 'status'        => ObjectiveStatus::NotCompleted,
-                'priority'      => $request->priority,
+                'priority'      => $request->priority ?? ObjectivePriority::Medium,
                 'project_id'    => $project->id
             ]);
     

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\enums\ObjectiveStatus;
+use App\Enums\RoleList;
 use App\Models\User;
 use App\Traits\SetTestingData;
 use Database\Seeders\RolesSeeder;
@@ -45,8 +46,8 @@ class ObjectiveControllerTest extends TestCase
         $stranger = User::factory()->create();
 
         $this->addUserToProject($project, $manager);
-        $this->addUserToProject($project, $user, 'User');
-        $this->addUserToProject($project, $viewer, 'Viewer');
+        $this->addUserToProject($project, $user, RoleList::User);
+        $this->addUserToProject($project, $viewer, RoleList::Viewer);
 
         $this->actingAs($owner)
             ->postJson(route('projects.objectives.store', $project), [
@@ -80,7 +81,7 @@ class ObjectiveControllerTest extends TestCase
             ->postJson(route('projects.objectives.store', $project), [
                 'title' => 'viewer objective',
                 'project_id' => $project->id
-            ])->assertJson(['success' => false, 'message' => 'This action is unauthorized, PPCO']);
+            ])->assertJson(['success' => false, 'message' => 'This action is unauthorized, OPCO']);
         
         $this->assertDatabaseMissing('objectives', ['project_id' => $project->id, 'title' => 'viewer objective']);
 
@@ -88,7 +89,7 @@ class ObjectiveControllerTest extends TestCase
             ->postJson(route('projects.objectives.store', $project), [
                 'title' => 'stranger objective',
                 'project_id' => $project->id
-            ])->assertJson(['success' => false, 'message' => 'This action is unauthorized, PPCO']);
+            ])->assertJson(['success' => false, 'message' => 'This action is unauthorized, OPCO']);
 
         $this->assertDatabaseMissing('objectives', ['project_id' => $project->id, 'title' => 'stranger objective']);
     }
@@ -101,8 +102,8 @@ class ObjectiveControllerTest extends TestCase
         $stranger = User::factory()->create();
 
         $this->addUserToProject($project, $manager);
-        $this->addUserToProject($project, $user, 'User');
-        $this->addUserToProject($project, $viewer, 'Viewer');
+        $this->addUserToProject($project, $user, RoleList::User);
+        $this->addUserToProject($project, $viewer, RoleList::Viewer);
 
         $this->actingAs($owner)
             ->putJson(route('projects.objectives.update', [$project, $objective]), ['title' => 'owner name'])
@@ -135,7 +136,7 @@ class ObjectiveControllerTest extends TestCase
         $viewer = User::factory()->create();
         $stranger = User::factory()->create();
 
-        $this->addUserToProject($project, $viewer, 'Viewer');
+        $this->addUserToProject($project, $viewer, RoleList::Viewer);
 
         $this->actingAs($owner)
             ->getJson(route('projects.objectives.show', [$project, $objective]))

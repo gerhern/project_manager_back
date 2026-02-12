@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\RoleList;
 use App\Traits\SetTestingData;
 use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -26,8 +27,8 @@ class UserHasOneRoleTest extends TestCase
 
         [$user, $team, $project] = $this->createProject();
 
-        $role1 = $this->getCachedRoleId('Member');
-        $role2 = $this->getCachedRoleId('Admin');
+        $role1 = $this->getCachedRoleId(RoleList::Member);
+        $role2 = $this->getCachedRoleId(RoleList::Admin);
 
         $user->projects()->attach($project->id, [
             'team_id' => $team->id,
