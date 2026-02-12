@@ -2,11 +2,11 @@
 
 namespace App\enums;
 
-enum ObjectiveStatus
+enum ObjectiveStatus: string
 {
-    case Completed;
-    case NotCompleted;
-    case Canceled;
+    case Completed = 'Completed';
+    case NotCompleted = 'NotCompleted';
+    case Canceled = 'Canceled';
 
     public function code(): string
     {

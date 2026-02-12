@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\ObjectivePriority;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Enum;
 
 class ObjectiveUpdateRequest extends FormRequest
 {
@@ -33,7 +35,8 @@ class ObjectiveUpdateRequest extends FormRequest
                 Rule::unique('objectives', 'title')->ignore($objective->id),
             ],
             'description' => 'nullable|string|max:1000',
-            'status' => 'prohibited'
+            'status' => 'prohibited',
+            'priority'    => ['string', new Enum(ObjectivePriority::class)]
         ];
     }
 }

@@ -42,7 +42,7 @@ Route::middleware('auth:sanctum')->group(function(){
     Route::get('/projects/{project}/objectives', [ObjectiveController::class, 'index'])
         ->name('projects.objectives.index');
 
-    Route::post('/projects/{project}/objectives/store', [ObjectiveController::class, 'store'])
+    Route::post('/projects/{project}/objectives', [ObjectiveController::class, 'store'])
         ->middleware(EnsureHierarchyIsPermitted::class)
         ->name('projects.objectives.store');
 

@@ -25,10 +25,10 @@ class CommandTest extends TestCase
 
         $this->artisan('dispute:resolve');
 
-        $this->assertDatabaseHas('projects', ['id' => $projectB->id, 'status' => ProjectStatus::Canceled->name]);
-        $this->assertDatabaseHas('project_disputes', ['project_id' => $projectB->id, 'status' => DisputeStatus::Expired->name]);
+        $this->assertDatabaseHas('projects', ['id' => $projectB->id, 'status' => ProjectStatus::Canceled]);
+        $this->assertDatabaseHas('project_disputes', ['project_id' => $projectB->id, 'status' => DisputeStatus::Expired]);
 
-        $this->assertDatabaseHas('projects', ['id' => $projectA->id, 'status' => ProjectStatus::Active->name]);
-        $this->assertDatabaseHas('project_disputes', ['project_id' => $projectA->id, 'status' => DisputeStatus::Open->name]);
+        $this->assertDatabaseHas('projects', ['id' => $projectA->id, 'status' => ProjectStatus::Active]);
+        $this->assertDatabaseHas('project_disputes', ['project_id' => $projectA->id, 'status' => DisputeStatus::Open]);
     }
 }

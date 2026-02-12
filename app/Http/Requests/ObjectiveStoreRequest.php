@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\ObjectivePriority;
 use App\Models\Project;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Enum;
 
 class ObjectiveStoreRequest extends FormRequest
 {
@@ -30,8 +32,10 @@ class ObjectiveStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => 'required|string|min:3|max:255',
-            'description' => 'nullable|string|min:3|max:1000'
+            'title'       => 'required|string|min:3|max:255',
+            'description' => 'nullable|string|min:3|max:1000',
+            'status'      => 'prohibited',
+            'priority'    => ['string', new Enum(ObjectivePriority::class)]
         ];
     }
 }

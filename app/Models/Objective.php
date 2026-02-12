@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ObjectivePriority;
 use App\Observers\ObjectiveObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
@@ -15,14 +16,16 @@ class Objective extends Model
     use HasFactory;
 
     protected $casts = [
-        'status' => ObjectiveStatus::class,
+        'status'    => ObjectiveStatus::class,
+        'priority'  => ObjectivePriority::class
     ];
 
     protected $fillable = [
         'status',
         'title',
         'description',
-        'project_id'
+        'project_id',
+        'priority'
     ];
 
     public function tasks(){
