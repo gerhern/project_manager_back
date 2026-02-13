@@ -14,67 +14,53 @@ use App\Models\Task;
 class TaskPolicy
 {
     public function viewTasks($user, $objective): Response{
-        if($objective->project_id !== $objective->project->id){
-            return Response::deny('This action is unauthorized, TKPITK');
-        }
-
-        if($user->id === $objective->project->user_id){
+        $project = $objective->project;
+        if($user->id === $project->user_id){
             return Response::allow();
         }
 
-        $hasRole = $user->hasProjectRole($objective->project, RoleList::projectRoles());
+        $hasRole = $user->hasProjectRole($project, RoleList::projectRoles());
         return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, TKPITK');
     }
 
-    public function createTask($user, $project, $objective): Response {
-        if($objective->project_id !== $project->id){
-            return Response::deny('This action is unauthorized, TKPCTK');
-        }
+    public function createTask($user, $objective): Response {
+        $project = $objective->project;
 
         if($user->id === $project->user_id){
             return Response::allow();
         }
 
-        $hasRole = $user->hasProjectRole($project, ['Manager', 'User']);
+        $hasRole = $user->hasProjectRole($project, [RoleList::Manager, RoleList::User]);
         return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, TKPCTK');
     }
 
-    public function viewTask($user, $project, $objective, $task): Response{
-        if($objective->project_id !== $project->id || $task->objective_id !== $objective->id){
-            return Response::deny('This action is unauthorized, TKPSTK');
-        }
-
+    public function viewTask($user, $objective, $task): Response{
+        $project = $objective->project;
         if($user->id === $project->user_id){
             return Response::allow();
         }
 
-        $hasRole = $user->hasProjectRole($project, ['Manager', 'User', 'Viewer']);
+        $hasRole = $user->hasProjectRole($project, RoleList::projectRoles());
         return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, TKPSTK');
     }
 
-    public function updateTask(User $user, Project $project, Objective $objective, Task $task): Response {
-        if($objective->id !== $task->objective_id || $project->id !== $objective->project_id){
-            return Response::deny('This action is unauthorized, TKPUTK');
-        }
-
+    public function updateTask(User $user, Objective $objective, Task $task): Response {
+        $project = $objective->project;
         if($user->id === $project->user_id){
             return Response::allow();
         }
 
-        $hasRole = $user->hasProjectRole($project, ['Manager', 'User']);
+        $hasRole = $user->hasProjectRole($project, [RoleList::Manager, RoleList::User]);
         return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, TKPUTK');
     }
 
-    public function cancelTask(User $user, Project $project, Objective $objective, Task $task): Response {
-        if($objective->id !== $task->objective_id || $project->id !== $objective->project_id){
-            return Response::deny('This action is unauthorized, TKPDTK');
-        }
-
+    public function cancelTask(User $user, Objective $objective, Task $task): Response {
+        $project = $objective->project;
         if($user->id === $project->user_id){
             return Response::allow();
         }
 
-        $hasRole = $user->hasProjectRole($project, ['Manager', 'User']);
+        $hasRole = $user->hasProjectRole($project, [RoleList::Manager, RoleList::User]);
         return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, TKPDTK');
     }
 

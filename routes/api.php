@@ -65,21 +65,21 @@ Route::middleware('auth:sanctum')->group(function(){
         ->name('projects.objectives.tasks.index')
         ->scopeBindings();
 
-    Route::post('projects/{project}/objectives/{objective}/store', [TaskController::class, 'store'])
+    Route::post('/objectives/{objective}/tasks', [TaskController::class, 'store'])
         ->name('projects.objectives.tasks.store')
         ->middleware(EnsureHierarchyIsPermitted::class)
         ->scopeBindings();
 
-    Route::get('projects/{project}/objectives/{objective}/tasks/{task}', [TaskController::class, 'show'])
+    Route::get('objectives/{objective}/tasks/{task}', [TaskController::class, 'show'])
         ->name('projects.objectives.tasks.show')
         ->scopeBindings();
 
-    Route::match(['PUT', 'PATCH'], 'projects/{project}/objectives/{objective}/tasks/{task}/update', [TaskController::class, 'update'])
+    Route::match(['PUT', 'PATCH'], 'objectives/{objective}/tasks/{task}', [TaskController::class, 'update'])
         ->middleware(EnsureHierarchyIsPermitted::class)
         ->name('projects.objectives.tasks.update')
         ->scopeBindings();
 
-    Route::delete( 'projects/{project}/objectives/{objective}/tasks/{task}/cancel', [TaskController::class, 'cancelTask'])
+    Route::delete( 'objectives/{objective}/tasks/{task}', [TaskController::class, 'cancelTask'])
         ->middleware(EnsureHierarchyIsPermitted::class)
         ->name('projects.objectives.tasks.delete')
         ->scopeBindings();

@@ -13,13 +13,6 @@ class TaskStoreRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        $project = $this->route('project');
-        $objective = $this->route('objective');
-
-        if(!$project || !$objective){
-            return false;
-        }
-
         return true;
     }
 
@@ -30,7 +23,7 @@ class TaskStoreRequest extends FormRequest
      */
     public function rules(): array
     {
-        $project = $this->route('project');
+        $project = $this->route('objective')->project;
 
         return [
             'title'         => 'required|string|min:3|max:255',

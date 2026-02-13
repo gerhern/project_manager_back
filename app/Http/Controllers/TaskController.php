@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\enums\TaskStatus;
+use App\Enums\TaskStatus;
 use App\Http\Requests\TaskStoreRequest;
 use App\Http\Requests\TaskUpdaterequest;
 use App\Http\Resources\TaskResource;
@@ -25,38 +25,46 @@ class TaskController extends Controller
         return $this->sendApiResponse(TaskResource::collection($tasks), 'Tasks retrieved successfully');
     }
 
-    public function store(TaskStoreRequest $request, Project $project, Objective $objective): JsonResponse {
-        Gate::authorize('createTask', [Task::class, $project, $objective]);
+    public function store(TaskStoreRequest $request, Objective $objective): JsonResponse {
+        Gate::authorize('createTask', [Task::class, $objective]);
 
         
         $task = Task::create(
             $request->validated() + [
                 'objective_id'  => $objective->id,
-                'status'        => $request->filled('user_id') ? TaskStatus::Assigned->name : TaskStatus::Pending
+                'status'        => $request->filled('user_id') ? TaskStatus::Assigned: TaskStatus::Pending
             ]);
 
-        return $this->sendApiResponse($task, 'Task created successfully', 201);
+        return $this->sendApiResponse(new TaskResource($task), 'Task created successfully', 201);
     }
 
-    public function show(Request $request, Project $project, Objective $objective, Task $task): JsonResponse {
-        Gate::authorize('viewTask', [Task::class, $project, $objective, $task]);
-        return $this->sendApiResponse($task, 'Task retrieved successfully');
+    public function show(Request $request, Objective $objective, Task $task): JsonResponse {
+        Gate::authorize('viewTask', [Task::class, $objective, $task]);
+        return $this->sendApiResponse(new TaskResource($task), 'Task retrieved successfully');
     }
 
-    public function update(TaskUpdaterequest $request, Project $project, Objective $objective, Task $task): JsonResponse {
-        Gate::authorize('updateTask', [Task::class, $project, $objective, $task]);
+    public function update(TaskUpdaterequest $request, Objective $objective, Task $task): JsonResponse {
+        Gate::authorize('updateTask', [Task::class, $objective, $task]);
 
-        $task->update($request->validated());
+        $data = $request->validated();
 
-        return $this->sendApiResponse($task, 'Task updated successfully');
+        if ($request->has('user_id')) {
+            $data['status'] = is_null($request->user_id) 
+                ? TaskStatus::Pending 
+                : TaskStatus::Assigned;
+        }
+
+        $task->update($data);
+
+        return $this->sendApiResponse(new TaskResource($task), 'Task updated successfully');
     }
 
 
-    public function cancelTask(Request $request,Project $project, Objective $objective, Task $task): JsonResponse{
+    public function cancelTask(Request $request, Objective $objective, Task $task): JsonResponse{
 
-        Gate::authorize('cancelTask', [Task::class, $project, $objective, $task]);
+        Gate::authorize('cancelTask', [Task::class, $objective, $task]);
         $task->update(['status' => TaskStatus::Canceled->name]);
-        return $this->sendApiResponse($task, 'Task canceled successfully');
+        return $this->sendApiResponse(new TaskResource($task), 'Task canceled successfully');
     }
 
     public function updateStatus(Request $request, Project $project, Objective $objective, Task $task): JsonResponse{

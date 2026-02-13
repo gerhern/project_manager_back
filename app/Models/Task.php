@@ -21,10 +21,16 @@ class Task extends Model
         'description',
         'due_date',
         'objective_id',
-        'status'
+        'status',
+        'user_id'
     ];
 
     public function objective(){
         return $this->belongsTo(Objective::class);
+    }
+
+    public function assignedUser() {
+        return $this->belongsTo(User::class, 'user_id');
+
     }
 }

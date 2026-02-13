@@ -23,7 +23,7 @@ class TaskUpdaterequest extends FormRequest
      */
     public function rules(): array
     {
-        $project = $this->route('project');
+        $project = $this->route('objective')->project;
         $task = $this->route('task');
 
         return [

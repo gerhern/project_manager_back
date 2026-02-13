@@ -20,7 +20,8 @@ class TaskResource extends JsonResource
             'description' => $this->description,
             'due_date'    => $this->due_date,
             'status'      => $this->status,
-            'objective'   => new  ObjectiveResource($this->whenLoaded('objective'))
+            'objective'   => new  ObjectiveResource($this->whenLoaded('objective')),
+            'assigned_to' => $this->assignedUser?->name ?? 'Sin Asignar'
         ];
     }
 }
