@@ -1,0 +1,38 @@
+<?php
+
+namespace App\Models;
+
+use App\Enums\ObjectivePriority;
+use App\Observers\ObjectiveObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+use App\Enums\ObjectiveStatus;
+
+#[ObservedBy([ObjectiveObserver::class])]
+class Objective extends Model
+{
+    use HasFactory;
+
+    protected $casts = [
+        'status'    => ObjectiveStatus::class,
+        'priority'  => ObjectivePriority::class
+    ];
+
+    protected $fillable = [
+        'status',
+        'title',
+        'description',
+        'project_id',
+        'priority'
+    ];
+
+    public function tasks(){
+        return $this->hasMany(Task::class);
+    }
+
+    public function project(){
+        return $this->belongsTo(Project::class);
+    }
+}
