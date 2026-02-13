@@ -84,11 +84,8 @@ Route::middleware('auth:sanctum')->group(function(){
         ->name('projects.objectives.tasks.delete')
         ->scopeBindings();
 
-    Route::match(
-            ['PUT', 'PATCH'],
-            'projects/{project}/objectives/{objective}/tasks/{task}/status', 
-            [TaskController::class, 'updateStatus']
-        )->middleware(EnsureHierarchyIsPermitted::class)
+    Route::patch('objectives/{objective}/tasks/status/{task}', [TaskController::class, 'updateStatus'])
+        ->middleware(EnsureHierarchyIsPermitted::class)
         ->name('projects.objectives.tasks.status')
         ->scopeBindings();
 

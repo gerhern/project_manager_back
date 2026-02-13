@@ -44,7 +44,7 @@ class MiddlewareCasesTest extends TestCase
         $routeParams = match($modelClass) {
             Project::class   => [$resource->team, $resource],
             Objective::class => [$resource->project, $resource],
-            Task::class      => [$resource->objective->project, $resource->objective, $resource],
+            Task::class      => [$resource->objective, $resource],
             default          => [$resource],
         };
         // dd($verb, $routeName, $routeParams, $jsonData);

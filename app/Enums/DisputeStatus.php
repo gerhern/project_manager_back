@@ -2,12 +2,12 @@
 
 namespace App\Enums;
 
-enum DisputeStatus
+enum DisputeStatus: string
 {
-    case Open;
-    case Accepted;
-    case Rejected;
-    case Expired;
+    case Open = 'Open';
+    case Accepted = 'Accepted';
+    case Rejected = 'Rejected';
+    case Expired = 'Expired';
 
     public function code(): string
     {
@@ -31,8 +31,8 @@ enum DisputeStatus
 
     public static function resolutionStates(): array {
         return [
-            self::Accepted->name,
-            self::Rejected->name
+            self::Accepted,
+            self::Rejected
         ];
     }
 }

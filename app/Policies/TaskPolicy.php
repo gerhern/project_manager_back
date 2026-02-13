@@ -64,24 +64,17 @@ class TaskPolicy
         return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, TKPDTK');
     }
 
-    public function updateTaskStatus(User $user, Project $project, Objective $objective, Task $task, string $status = null): Response {
-        if (!$status || $status === TaskStatus::Canceled->name){
-            return Response::deny('This action is unauthorized, TKPUSTK');
-        }
-
-        if($objective->id !== $task->objective_id || $project->id !== $objective->project_id){
+    public function updateTaskStatus(User $user, Objective $objective, Task $task, string $status = null): Response {
+        $project = $objective->project;
+        if ($status === null || $status === TaskStatus::Canceled->value){
             return Response::deny('This action is unauthorized, TKPUSTK');
         }
         
-        if($user->id === $project->user_id){
+        if($user->id === $project->user_id || $task->user_id === $user->id){
             return Response::allow();
         }
 
-        if($task->user_id !== $user->id){
-            return Response::deny('This action is unauthorized, TKPUSTK');
-        }
-
-        $hasRole = $user->hasProjectRole($project, ['Manager', 'User']);
+        $hasRole = $user->hasProjectRole($project, RoleList::Manager);
 
         return $hasRole ? Response::allow() : Response::deny('This action is unauthorized, TKPUSTK');
     }

@@ -12,8 +12,8 @@ class ProjectDisputePolicy
 {
 
     public function updateDisputeStatus(User $user, ProjectDispute $dispute): Response{
-         $isResolved = in_array($dispute->status->name, DisputeStatus::resolutionStates());
-         $projectIsCanceled = in_array($dispute->project->status->name, ProjectStatus::completedStates());
+         $isResolved = in_array($dispute->status, DisputeStatus::resolutionStates());
+         $projectIsCanceled = in_array($dispute->project->status, ProjectStatus::completedStates());
 
          if($isResolved){
             return Response::deny('This dispute has already been resolved, PPDUDS');

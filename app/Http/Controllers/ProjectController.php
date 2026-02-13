@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\{DisputeStatus, ProjectStatus, RoleList};
 use App\Http\Requests\ProjectStoreRequest;
 use App\Http\Requests\ProjectUpdateRequest;
+use App\Http\Resources\DisputeResource;
 use App\Http\Resources\ProjectResource;
 use App\Notifications\DisputeStartNotification;
 use App\Traits\ApiResponse;
@@ -75,7 +76,6 @@ class ProjectController extends Controller
     public function resolveDispute(Request $request, ProjectDispute $dispute): JsonResponse
     {
         Gate::authorize('updateDisputeStatus', $dispute);
-
         $request->validate([
             'status' => [
                 'required',
@@ -86,7 +86,7 @@ class ProjectController extends Controller
         try {
             \DB::beginTransaction();
 
-            $isAccepted = $request->status === DisputeStatus::Accepted->name;
+            $isAccepted = $request->status === DisputeStatus::Accepted->value;
     
             $dispute->project->update([
                 'status' => $isAccepted ? ProjectStatus::Canceled : ProjectStatus::Active
@@ -96,7 +96,7 @@ class ProjectController extends Controller
 
             \Db::commit();
     
-            return $this->sendApiResponse($dispute, 'Dispute '. ($isAccepted ? 'resolved' : 'rejected') . ' successfully');
+            return $this->sendApiResponse(new DisputeResource($dispute), 'Dispute '. ($isAccepted ? 'resolved' : 'rejected') . ' successfully');
         }catch(\Exception $e){
             \Db::rollBack();
             \Log::error('Error trying to close dispute: '.$e->getMessage());

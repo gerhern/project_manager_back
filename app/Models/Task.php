@@ -33,4 +33,18 @@ class Task extends Model
         return $this->belongsTo(User::class, 'user_id');
 
     }
+
+    public function transitionStatus(TaskStatus $newStatus)
+    {
+        if (!$this->user_id) {
+            $this->status = TaskStatus::Pending;
+            return;
+        }
+
+        $allowedForUser = [TaskStatus::InProgress, TaskStatus::Completed, TaskStatus::Assigned];
+        
+        if (in_array($newStatus, $allowedForUser)) {
+            $this->status = $newStatus;
+        }
+    }
 }

@@ -41,8 +41,8 @@ enum ProjectStatus: string
 
     public static function completedStates(){
         return [
-            self::Canceled->name,
-            self::Completed->name
+            self::Canceled,
+            self::Completed
         ];
     }
 }

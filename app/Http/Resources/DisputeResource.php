@@ -16,10 +16,10 @@ class DisputeResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'expired_at' => $this->expired_at,
+            'status' => $this->status,
             'project' => new ProjectResource($this->whenLoaded('project')),
-            'user'  => new UserResource($this->whenLoaded('user')),
-            'expired_at' => $this->expired_at?->format('Y-m-d'),
-            'status' => $this->status
+            'user'  => new UserResource($this->whenLoaded('user'))
         ];
     }
 }
