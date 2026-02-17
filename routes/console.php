@@ -1,10 +1,13 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('dispute:resolve')
     ->daily()
+    ->runInBackground()
+    ->withoutOverlapping();
+
+Schedule::command('demo:refresh')
+    ->dailyAt('00:01')
     ->runInBackground()
     ->withoutOverlapping();

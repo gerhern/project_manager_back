@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\TaskStatus;
+use App\Models\Objective;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -16,10 +18,17 @@ class TaskFactory extends Factory
      */
     public function definition(): array
     {
+
+        $jobTitles = ['Implement', 'Fix', 'Refactor', 'Testing', 'Design'];
+        $features = ['authentication', 'payment module', 'push notifications', 'user interface', 'API REST'];
+
         return [
-            'title' => $this->faker->sentence,
-            'description' => $this->faker->paragraph,
-            'due_date' => $this->faker->date(),
+            'title' => $this->faker->randomElement($jobTitles) . ' ' . $this->faker->randomElement($features),
+            'description' => $this->faker->paragraph(2),
+            'due_date' => $this->faker->dateTimeBetween('now', '+1 month'),
+            'objective_id' => Objective::factory(),
+            'user_id' => null, // Por defecto pendiente
+            'status' => TaskStatus::Pending,
         ];
     }
 }
