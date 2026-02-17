@@ -27,146 +27,140 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([RolesSeeder::class]);
-
-        $roles = Role::all();
+        $roles = Role::all()->keyBy('name');
 
         $admin = User::factory()->create(['name' => 'Carmine', 'email' => '1@1.com']);
         $allUsers = User::factory()->count(9)->create()->push($admin);
 
-        $specialCount = 0;
-
-        Team::factory()->count(5)->create([
-            // 'user_id' => fn() => $allUsers->random()->id
-        ])->each(function ($team) use (&$specialCount, $allUsers, $roles) {
-
+        Team::factory(5)->create()->each(function ($team) use ($allUsers, $roles) {
             $owner = $allUsers->random();
-            $team->members()->attach($owner->id, 
-                ['role_id' => $roles->where('name', 'Owner')->first()->id]);
+
+            $team->members()->attach($owner->id, ['role_id' => $roles['Owner']->id]);
 
             $otherMembers = $allUsers->where('id', '!=', $owner->id)->random(3);
             foreach ($otherMembers as $user) {
                 $team->members()->attach($user->id, [
-                    'role_id' => collect([$roles->where('name', 'Admin')->first()->id, $roles->where('name', 'Member')->first()->id])->random()
+                    'role_id' => collect([$roles['Admin']->id, $roles['Member']->id])->random()
                 ]);
             }
 
-            // 1. Determinar Estatus del Proyecto
-            $projectStatus = ProjectStatus::Active->name;
-            if (rand(0, 1) && $specialCount < 4) {
-                $projectStatus = ($specialCount < 2) ? ProjectStatus::Completed->name : ProjectStatus::Canceled;
-                $specialCount++;
-            }
+            $team->load('members');
+
+            $projectStatus = $this->syncProjectStatus();
 
             $project = Project::factory()->create([
                 'team_id' => $team->id,
-                'user_id' => $allUsers->random()->id,
+                'user_id' => $owner->id,
                 'status' => $projectStatus
             ]);
 
-            if ($projectStatus === ProjectStatus::Canceled || $projectStatus === ProjectStatus::CancelInProgress) {
-                // 1. Decidir aleatoriamente si creamos disputa
-                if (rand(0, 1)) {
-                    $status = collect([
-                        DisputeStatus::Expired,
-                        DisputeStatus::Accepted,
-                    ])->random();
-                    
-                    $disputeStatus = $projectStatus === ProjectStatus::CancelInProgress ? DisputeStatus::Open : $status;
-                        
+            $team->members->each(function ($user) use ($project, $roles, $owner) {
+                $project->users()->attach($user->id, [
+                    'role_id' => ($user->id === $owner->id)
+                        ? $roles['Manager']->id
+                        : collect([$roles['User']->id, $roles['Viewer']->id])->random()
+                ]);
+            });
+
+            $project->load('users');
+
+            if (in_array($projectStatus, [ProjectStatus::Canceled, ProjectStatus::CancelInProgress])) {
+                if($projectStatus === ProjectStatus::CancelInProgress){
+
                     ProjectDispute::factory()->create([
+                        'project_id' => $project->id,
+                        'user_id' => $project->users->random()->id,
+                        'status' => DisputeStatus::Open
+                    ]);    
+                }else{
+                    if (rand(0, 1)) {
+                        $disputeStatus = collect([DisputeStatus::Expired, DisputeStatus::Accepted])->random();
+    
+                        ProjectDispute::factory()->create([
                             'project_id' => $project->id,
-                            'user_id' => $allUsers->random()->id,
-                            'status' => $disputeStatus->name,
-                            'expired_at' => ($disputeStatus === 'expired') ? now()->subDays(5) : now()->addDays(5),
+                            'user_id' => $project->users->random()->id,
+                            'status' => $disputeStatus,
                         ]);
+                    }
                 }
             }
 
-            $team->members->each(function ($user) use ($project, $roles) {
-                $project->users()->attach($user->id, [
-                    'role_id' => collect([
-                        $roles->where('name', 'Manager')->first()->id,
-                        $roles->where('name', 'User')->first()->id,
-                        $roles->where('name', 'Viewer')->first()->id
-                    ])
-                ->random()
-                ]);
-            });
+            $objectiveStatus = $this->syncObjectiveStatus($projectStatus);
 
-            // 2. Crear Objetivos
-            Objective::factory()->count(3)->create([
+            Objective::factory(3)->create([
                 'project_id' => $project->id,
-                'status' => $this->getStatusFromParent($projectStatus, [
-                    ObjectiveStatus::NotCompleted->name,
-                    ObjectiveStatus::Completed->name,
-                    ObjectiveStatus::Canceled->name
-                ])
-            ])->each(function ($objective) use ($projectStatus) {
+                'status' => $objectiveStatus
+            ])->each(function ($objective) use ($project, $objectiveStatus) {
 
-                // 3. Crear Tareas
-                Task::factory()->count(5)->create([
+                Task::factory(5)->create([
                     'objective_id' => $objective->id,
-                    'status' => $this->getStatusFromParent($objective->status->name, [
-                        TaskStatus::Assigned->name,
-                        TaskStatus::Canceled->name,
-                        TaskStatus::Completed->name,
-                        TaskStatus::InProgress->name,
-                        TaskStatus::Pending->name
-                    ])
-                ]);
+                ])->each(function ($task) use ($project, $objectiveStatus) {
+
+                    $taskStatus = $this->syncTaskStatus($objectiveStatus);
+
+                    $assignedUserId = ($taskStatus === TaskStatus::Pending)
+                        ? null
+                        : $project->users->random()->id;
+
+                    $task->update([
+                        'status' => $taskStatus,
+                        'user_id' => $assignedUserId,
+                    ]);
+                });
             });
         });
+    }
 
-        $disputedProjects = Project::where('status', ProjectStatus::CancelInProgress)->get();
-        foreach ($disputedProjects as $disputed) {
-            $this->createDispute($disputed, $allUsers->random());
+    private function syncProjectStatus(){
+        return $this->weightedRandom([
+            ProjectStatus::Active->name => 40,
+            ProjectStatus::Canceled->name => 20,
+            ProjectStatus::CancelInProgress->name => 20,
+            ProjectStatus::Completed->name => 20
+        ], ProjectStatus::class);
+    }
+
+    private function syncObjectiveStatus(ProjectStatus $projectStatus): ObjectiveStatus
+    {
+        return match ($projectStatus) {
+            ProjectStatus::Completed,
+            ProjectStatus::Canceled => collect([ObjectiveStatus::Completed, ObjectiveStatus::Canceled])->random(),
+
+            default => $this->weightedRandom([
+                ObjectiveStatus::NotCompleted->name => 50,
+                ObjectiveStatus::Completed->name => 40,
+                ObjectiveStatus::Canceled->name => 10,
+            ], ObjectiveStatus::class),
         };
     }
 
-    // private function getRandomStatus(string $parentStatus, array $allOptions): string
-    // {
-
-    //     if (in_array($parentStatus, ['Completed', 'Cancelled'])) {
-    //         return collect(['Completed', 'Cancelled'])->intersect($allOptions)->random() 
-    //             ?? $parentStatus;
-    //     }
-
-    //     // Si el padre está activo, el hijo puede ser cualquier cosa
-    //     return collect($allOptions)->random();
-    // }
-
-
-    private function getStatusFromParent(mixed $parentStatus, array $availableOptions): mixed
+    private function syncTaskStatus(ObjectiveStatus $objectiveStatus): TaskStatus
     {
-        // Definimos qué estados se consideran "Finalizados"
-        $closedStatuses = [
-            ProjectStatus::Completed,
-            ProjectStatus::Canceled,
+        return match ($objectiveStatus) {
             ObjectiveStatus::Completed,
-            ObjectiveStatus::Canceled
-        ];
+            ObjectiveStatus::Canceled => collect([TaskStatus::Completed, TaskStatus::Canceled])->random(),
 
-        if (in_array($parentStatus, $closedStatuses)) {
-            // Si el padre está cerrado, filtramos las opciones del hijo que también representen cierre
-            return collect($availableOptions)
-                ->filter(
-                    fn($status) => str_contains(strtolower($status), 'complete')
-                    || str_contains(strtolower($status), 'canceled')
-                    // || str_contains(strtolower($status), 'done')
-                )
-                ->random();
+            default => $this->weightedRandom([
+                TaskStatus::InProgress->name => 30,
+                TaskStatus::Assigned->name => 20,
+                TaskStatus::Pending->name => 20,
+                TaskStatus::Completed->name => 20,
+                TaskStatus::Canceled->name => 10,
+            ], TaskStatus::class),
+        };
+    }
+    private function weightedRandom(array $weights, string $enumClass): mixed
+    {
+        $rand = rand(1, array_sum($weights));
+        $current = 0;
+
+        foreach ($weights as $value => $weight) {
+            $current += $weight;
+            if ($rand <= $current) {
+                return constant("$enumClass::$value");
+            }
         }
 
-        return collect($availableOptions)->random();
-    }
-    public function createDispute(Project $project, User $user, $status = DisputeStatus::Open, $date = null): ProjectDispute
-    {
-        $date ??= Carbon::now()->addDays(15);
-        return ProjectDispute::create([
-            'project_id' => $project->id,
-            'user_id' => $user->id,
-            'expired_at' => $date,
-            'status' => $status->name
-        ]);
+        return $enumClass::cases()[0];
     }
 }

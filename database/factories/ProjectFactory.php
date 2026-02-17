@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Enums\ProjectStatus;
 
@@ -23,7 +24,8 @@ class ProjectFactory extends Factory
             'name' => $this->faker->sentence(3),
             'description' => $this->faker->paragraph(),
             'status' => ProjectStatus::Active,
-            'team_id' => Team::factory()
+            'team_id' => Team::factory(),
+            'user_id' => User::factory(),
         ];
     }
 }
