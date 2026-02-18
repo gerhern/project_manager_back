@@ -29,7 +29,7 @@ class DatabaseSeeder extends Seeder
         $this->call([RolesSeeder::class]);
         $roles = Role::all()->keyBy('name');
 
-        $admin = User::factory()->create(['name' => 'Carmine', 'email' => '1@1.com']);
+        $admin = User::factory()->create(['name' => 'Testing user', 'email' => 'testing@test.com']);
         $allUsers = User::factory()->count(9)->create()->push($admin);
 
         Team::factory(5)->create()->each(function ($team) use ($allUsers, $roles) {
